@@ -35,6 +35,7 @@ import org.eclipse.milo.opcua.sdk.server.nodes.UaMethodNode;
 import org.eclipse.milo.opcua.sdk.server.nodes.UaVariableNode;
 import org.eclipse.milo.opcua.sdk.server.nodes.delegates.AttributeDelegate;
 import org.eclipse.milo.opcua.sdk.server.nodes.delegates.AttributeDelegateChain;
+import org.eclipse.milo.opcua.sdk.server.util.AnnotationBasedInvocationHandler;
 import org.eclipse.milo.opcua.sdk.server.util.SubscriptionModel;
 import org.eclipse.milo.opcua.stack.core.AttributeId;
 import org.eclipse.milo.opcua.stack.core.Identifiers;
@@ -61,288 +62,271 @@ import de.loosensimnetz.iot.raspi.motor.Motor;
 
 public class RaspiServerNamespace implements Namespace {
 
-    public static final String NAMESPACE_URI = "urn:de.loosensimnetz:iot:raspiserver";
+	public static final String NAMESPACE_URI = "urn:de.loosensimnetz:iot:raspiserver";
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final SubscriptionModel subscriptionModel;
+	/**
+	 * Manages subscriptions to OPC UA events
+	 */
+	private final SubscriptionModel subscriptionModel;
 
-    private final OpcUaServer server;
-    private final UShort namespaceIndex;
-    
-    private final Motor motor;
+	private final OpcUaServer server;
+	private final UShort namespaceIndex;
 
-    public RaspiServerNamespace(OpcUaServer server, UShort namespaceIndex, Motor motor) {
-        this.server = server;
-        this.namespaceIndex = namespaceIndex;
-        this.motor = motor;
+	/**
+	 * The motor model for this OPC UA server
+	 */
+	private final Motor motor;
 
-        subscriptionModel = new SubscriptionModel(server, this);
+	public RaspiServerNamespace(OpcUaServer server, UShort namespaceIndex, Motor motor) {
+		this.server = server;
+		this.namespaceIndex = namespaceIndex;
+		this.motor = motor;
 
-        createRaspiServerFolder();
-    }
+		subscriptionModel = new SubscriptionModel(server, this);
 
-	private void createRaspiServerFolder() {
-		try {
-            // Create a "RaspiServer" folder and add it to the node manager
-            NodeId folderNodeId = new NodeId(namespaceIndex, "RaspiServer");
-
-            UaFolderNode folderNode = new UaFolderNode(
-                server.getNodeMap(),
-                folderNodeId,
-                new QualifiedName(namespaceIndex, "RaspiServer"),
-                LocalizedText.english("RaspiServer")
-            );
-
-            server.getNodeMap().addNode(folderNode);
-
-            // Make sure our new folder shows up under the server's Objects folder
-            server.getUaNamespace().addReference(
-                Identifiers.ObjectsFolder,
-                Identifiers.Organizes,
-                true,
-                folderNodeId.expanded(),
-                NodeClass.Object
-            );
-
-            // Add the rest of the nodes
-            addVariableNodes(folderNode);
-        } catch (UaException e) {
-            logger.error("Error adding nodes: {}", e.getMessage(), e);
-        }
+		createRaspiServerFolder();
 	}
 
-    @Override
-    public UShort getNamespaceIndex() {
-        return namespaceIndex;
-    }
+	/**
+	 * Helper method to create the folder for the RaspberryPi server
+	 */
+	private void createRaspiServerFolder() {
+		try {
+			// Create a "RaspiServer" folder and add it to the node manager
+			NodeId folderNodeId = new NodeId(namespaceIndex, "RaspiServer");
 
-    @Override
-    public String getNamespaceUri() {
-        return NAMESPACE_URI;
-    }
+			UaFolderNode folderNode = new UaFolderNode(server.getNodeMap(), folderNodeId,
+					new QualifiedName(namespaceIndex, "RaspiServer"), LocalizedText.english("RaspiServer"));
 
-    private void addVariableNodes(UaFolderNode rootNode) {
-        addDynamicNodes(rootNode);
-    }
+			server.getNodeMap().addNode(folderNode);
 
-    private void addDynamicNodes(UaFolderNode rootNode) {
-        UaFolderNode dynamicFolder = new UaFolderNode(
-            server.getNodeMap(),
-            new NodeId(namespaceIndex, "RaspiServer/Motor"),
-            new QualifiedName(namespaceIndex, "Motor"),
-            LocalizedText.english("Motor")
-        );
+			// Make sure our new folder shows up under the server's Objects folder
+			server.getUaNamespace().addReference(Identifiers.ObjectsFolder, Identifiers.Organizes, true,
+					folderNodeId.expanded(), NodeClass.Object);
 
-        server.getNodeMap().addNode(dynamicFolder);
-        rootNode.addOrganizes(dynamicFolder);
+			// Add the motor nodes
+			addMotorNodes(folderNode);
 
-        // Dynamic Boolean MotorOn
-        {
-            String name = "MotorOn";
-            NodeId typeId = Identifiers.Boolean;
-            Variant variant = new Variant(false);
+			// Add the led nodes
+			addLedNodes(folderNode, 1);
+			addLedNodes(folderNode, 2);
+		} catch (UaException e) {
+			logger.error("Error adding nodes: {}", e.getMessage(), e);
+		}
+	}
 
-            UaVariableNode node = new UaVariableNode.UaVariableNodeBuilder(server.getNodeMap())
-                .setNodeId(new NodeId(namespaceIndex, "RaspiServer/Motor/" + name))
-                .setAccessLevel(ubyte(AccessLevel.getMask(AccessLevel.READ_ONLY)))
-                .setBrowseName(new QualifiedName(namespaceIndex, name))
-                .setDisplayName(LocalizedText.english(name))
-                .setDataType(typeId)
-                .setTypeDefinition(Identifiers.BaseDataVariableType)
-                .build();
+	@Override
+	public UShort getNamespaceIndex() {
+		return namespaceIndex;
+	}
 
-            node.setValue(new DataValue(variant));
+	@Override
+	public String getNamespaceUri() {
+		return NAMESPACE_URI;
+	}
 
-            AttributeDelegate delegate = AttributeDelegateChain.create(
-                new AttributeDelegate() {
-                    @Override
-                    public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
-                        return new DataValue(new Variant(motor.isMovingDown() || motor.isMovingUp()));
-                    }
-                },
-                ValueLoggingDelegate::new
-            );
+	/**
+	 * Add the dynamic nodes to the root node
+	 * 
+	 * @param rootNode
+	 *            Root folder
+	 */
+	private void addMotorNodes(UaFolderNode rootNode) {
+		UaFolderNode dynamicFolder = new UaFolderNode(server.getNodeMap(),
+				new NodeId(namespaceIndex, "RaspiServer/Motor"), new QualifiedName(namespaceIndex, "Motor"),
+				LocalizedText.english("Motor"));
 
-            node.setAttributeDelegate(delegate);
+		server.getNodeMap().addNode(dynamicFolder);
+		rootNode.addOrganizes(dynamicFolder);
 
-            server.getNodeMap().addNode(node);
-            dynamicFolder.addOrganizes(node);
-        }
-        
-        // Dynamic Boolean MotorUp
-        {
-            String name = "MotorUp";
-            NodeId typeId = Identifiers.Boolean;
-            Variant variant = new Variant(false);
+		// Dynamic Boolean MotorDown
+		addDynamicBoolean(dynamicFolder, "MotorDown", AttributeDelegateChain.create(new AttributeDelegate() {
+			@Override
+			public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
+				return new DataValue(new Variant(motor.isMovingDown()));
+			}
+		}, ValueLoggingDelegate::new));
 
-            UaVariableNode node = new UaVariableNode.UaVariableNodeBuilder(server.getNodeMap())
-                .setNodeId(new NodeId(namespaceIndex, "RaspiServer/Motor/" + name))
-                .setAccessLevel(ubyte(AccessLevel.getMask(AccessLevel.READ_ONLY)))
-                .setBrowseName(new QualifiedName(namespaceIndex, name))
-                .setDisplayName(LocalizedText.english(name))
-                .setDataType(typeId)
-                .setTypeDefinition(Identifiers.BaseDataVariableType)
-                .build();
+		// Dynamic Boolean MotorUp
+		addDynamicBoolean(dynamicFolder, "MotorUp", AttributeDelegateChain.create(new AttributeDelegate() {
+			@Override
+			public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
+				return new DataValue(new Variant(motor.isMovingUp()));
+			}
+		}, ValueLoggingDelegate::new));
 
-            node.setValue(new DataValue(variant));
+		// Dynamic Boolean MotorMoving
+		addDynamicBoolean(dynamicFolder, "MotorMoving", AttributeDelegateChain.create(new AttributeDelegate() {
+			@Override
+			public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
+				return new DataValue(new Variant(motor.isMovingUp() || motor.isMovingDown()));
+			}
+		}, ValueLoggingDelegate::new));
+	}
+	
+	private void addLedNodes(UaFolderNode folderNode, int ledNumber) {
+		String ledName = "Led" + ledNumber;
+		String folderId = "RaspiServer/Leds/" + ledName;
+		String methodName = "turnLedOn(x)";
+		String methodId = folderId + "/"+ methodName;
+		
+		UaFolderNode ledsFolder = new UaFolderNode(server.getNodeMap(),
+				new NodeId(namespaceIndex, folderId), new QualifiedName(namespaceIndex, ledName),
+				LocalizedText.english("Led number " + ledNumber));
+		
+		UaMethodNode methodNode = UaMethodNode.builder(server.getNodeMap())
+				.setNodeId(new NodeId(namespaceIndex, methodId))
+				.setBrowseName(new QualifiedName(namespaceIndex, methodName))
+				.setDisplayName(new LocalizedText(null, methodName))
+				.setDescription(
+						LocalizedText.english("Turns the led on (x = true) or off (x = false). Returns the state of the led before the invocation."))
+				.build();
 
-            AttributeDelegate delegate = AttributeDelegateChain.create(
-                new AttributeDelegate() {
-                    @Override
-                    public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
-                        return new DataValue(new Variant(motor.isMovingUp()));
-                    }
-                },
-                ValueLoggingDelegate::new
-            );
+		try {
+			AnnotationBasedInvocationHandler invocationHandler = AnnotationBasedInvocationHandler
+					.fromAnnotatedObject(server.getNodeMap(), new LedStateMethod(motor, ledNumber));
 
-            node.setAttributeDelegate(delegate);
+			methodNode.setProperty(UaMethodNode.InputArguments, invocationHandler.getInputArguments());
+			methodNode.setProperty(UaMethodNode.OutputArguments, invocationHandler.getOutputArguments());
+			methodNode.setInvocationHandler(invocationHandler);
 
-            server.getNodeMap().addNode(node);
-            dynamicFolder.addOrganizes(node);
-        }	
-        
-        // Dynamic Boolean MotorDown
-        {
-            String name = "MotorDown";
-            NodeId typeId = Identifiers.Boolean;
-            Variant variant = new Variant(false);
+			server.getNodeMap().addNode(methodNode);
 
-            UaVariableNode node = new UaVariableNode.UaVariableNodeBuilder(server.getNodeMap())
-                .setNodeId(new NodeId(namespaceIndex, "RaspiServer/Motor/" + name))
-                .setAccessLevel(ubyte(AccessLevel.getMask(AccessLevel.READ_ONLY)))
-                .setBrowseName(new QualifiedName(namespaceIndex, name))
-                .setDisplayName(LocalizedText.english(name))
-                .setDataType(typeId)
-                .setTypeDefinition(Identifiers.BaseDataVariableType)
-                .build();
+			folderNode.addReference(new Reference(folderNode.getNodeId(), Identifiers.HasComponent,
+					methodNode.getNodeId().expanded(), methodNode.getNodeClass(), true));
 
-            node.setValue(new DataValue(variant));
+			methodNode.addReference(new Reference(methodNode.getNodeId(), Identifiers.HasComponent,
+					folderNode.getNodeId().expanded(), folderNode.getNodeClass(), false));
+		} catch (Exception e) {
+			logger.error("Error creating sqrt() method.", e);
+		}
+	}
 
-            AttributeDelegate delegate = AttributeDelegateChain.create(
-                new AttributeDelegate() {
-                    @Override
-                    public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
-                        return new DataValue(new Variant(motor.isMovingDown()));
-                    }
-                },
-                ValueLoggingDelegate::new
-            );
+	/**
+	 * Helper method to add a dynamic read-only attribute node to
+	 * <code>dynamicFolder</code>
+	 * 
+	 * @param dynamicFolder
+	 *            Folder
+	 * @param nodeName
+	 *            Name of the node
+	 * @param attributeDelegate
+	 *            Delegate for the node value
+	 */
+	private void addDynamicBoolean(UaFolderNode dynamicFolder, String nodeName, AttributeDelegate attributeDelegate) {
+		String name = nodeName;
+		NodeId typeId = Identifiers.Boolean;
+		Variant variant = new Variant(false);
 
-            node.setAttributeDelegate(delegate);
+		UaVariableNode node = new UaVariableNode.UaVariableNodeBuilder(server.getNodeMap())
+				.setNodeId(new NodeId(namespaceIndex, "RaspiServer/Motor/" + name))
+				.setAccessLevel(ubyte(AccessLevel.getMask(AccessLevel.READ_ONLY)))
+				.setBrowseName(new QualifiedName(namespaceIndex, name)).setDisplayName(LocalizedText.english(name))
+				.setDataType(typeId).setTypeDefinition(Identifiers.BaseDataVariableType).build();
 
-            server.getNodeMap().addNode(node);
-            dynamicFolder.addOrganizes(node);
-        }	
-    }
+		node.setValue(new DataValue(variant));
 
-    @Override
-    public CompletableFuture<List<Reference>> browse(AccessContext context, NodeId nodeId) {
-        ServerNode node = server.getNodeMap().get(nodeId);
+		node.setAttributeDelegate(attributeDelegate);
 
-        if (node != null) {
-            return CompletableFuture.completedFuture(node.getReferences());
-        } else {
-            return FutureUtils.failedFuture(new UaException(StatusCodes.Bad_NodeIdUnknown));
-        }
-    }
+		server.getNodeMap().addNode(node);
+		dynamicFolder.addOrganizes(node);
+	}
 
-    @Override
-    public void read(
-        ReadContext context,
-        Double maxAge,
-        TimestampsToReturn timestamps,
-        List<ReadValueId> readValueIds) {
+	@Override
+	public CompletableFuture<List<Reference>> browse(AccessContext context, NodeId nodeId) {
+		ServerNode node = server.getNodeMap().get(nodeId);
 
-        List<DataValue> results = Lists.newArrayListWithCapacity(readValueIds.size());
+		if (node != null) {
+			return CompletableFuture.completedFuture(node.getReferences());
+		} else {
+			return FutureUtils.failedFuture(new UaException(StatusCodes.Bad_NodeIdUnknown));
+		}
+	}
 
-        for (ReadValueId readValueId : readValueIds) {
-            ServerNode node = server.getNodeMap().get(readValueId.getNodeId());
+	@Override
+	public void read(ReadContext context, Double maxAge, TimestampsToReturn timestamps,
+			List<ReadValueId> readValueIds) {
 
-            if (node != null) {
-                DataValue value = node.readAttribute(
-                    new AttributeContext(context),
-                    readValueId.getAttributeId(),
-                    timestamps,
-                    readValueId.getIndexRange()
-                );
+		List<DataValue> results = Lists.newArrayListWithCapacity(readValueIds.size());
 
-                results.add(value);
-            } else {
-                results.add(new DataValue(StatusCodes.Bad_NodeIdUnknown));
-            }
-        }
+		for (ReadValueId readValueId : readValueIds) {
+			ServerNode node = server.getNodeMap().get(readValueId.getNodeId());
 
-        context.complete(results);
-    }
+			if (node != null) {
+				DataValue value = node.readAttribute(new AttributeContext(context), readValueId.getAttributeId(),
+						timestamps, readValueId.getIndexRange());
 
-    @Override
-    public void write(WriteContext context, List<WriteValue> writeValues) {
-        List<StatusCode> results = Lists.newArrayListWithCapacity(writeValues.size());
+				results.add(value);
+			} else {
+				results.add(new DataValue(StatusCodes.Bad_NodeIdUnknown));
+			}
+		}
 
-        for (WriteValue writeValue : writeValues) {
-            ServerNode node = server.getNodeMap().get(writeValue.getNodeId());
+		context.complete(results);
+	}
 
-            if (node != null) {
-                try {
-                    node.writeAttribute(
-                        new AttributeContext(context),
-                        writeValue.getAttributeId(),
-                        writeValue.getValue(),
-                        writeValue.getIndexRange()
-                    );
+	@Override
+	public void write(WriteContext context, List<WriteValue> writeValues) {
+		List<StatusCode> results = Lists.newArrayListWithCapacity(writeValues.size());
 
-                    results.add(StatusCode.GOOD);
+		for (WriteValue writeValue : writeValues) {
+			ServerNode node = server.getNodeMap().get(writeValue.getNodeId());
 
-                    logger.info(
-                        "Wrote value {} to {} attribute of {}",
-                        writeValue.getValue().getValue(),
-                        AttributeId.from(writeValue.getAttributeId()).map(Object::toString).orElse("unknown"),
-                        node.getNodeId());
-                } catch (UaException e) {
-                    logger.error("Unable to write value={}", writeValue.getValue(), e);
-                    results.add(e.getStatusCode());
-                }
-            } else {
-                results.add(new StatusCode(StatusCodes.Bad_NodeIdUnknown));
-            }
-        }
+			if (node != null) {
+				try {
+					node.writeAttribute(new AttributeContext(context), writeValue.getAttributeId(),
+							writeValue.getValue(), writeValue.getIndexRange());
 
-        context.complete(results);
-    }
+					results.add(StatusCode.GOOD);
 
-    @Override
-    public void onDataItemsCreated(List<DataItem> dataItems) {
-        subscriptionModel.onDataItemsCreated(dataItems);
-    }
+					logger.info("Wrote value {} to {} attribute of {}", writeValue.getValue().getValue(),
+							AttributeId.from(writeValue.getAttributeId()).map(Object::toString).orElse("unknown"),
+							node.getNodeId());
+				} catch (UaException e) {
+					logger.error("Unable to write value={}", writeValue.getValue(), e);
+					results.add(e.getStatusCode());
+				}
+			} else {
+				results.add(new StatusCode(StatusCodes.Bad_NodeIdUnknown));
+			}
+		}
 
-    @Override
-    public void onDataItemsModified(List<DataItem> dataItems) {
-        subscriptionModel.onDataItemsModified(dataItems);
-    }
+		context.complete(results);
+	}
 
-    @Override
-    public void onDataItemsDeleted(List<DataItem> dataItems) {
-        subscriptionModel.onDataItemsDeleted(dataItems);
-    }
+	@Override
+	public void onDataItemsCreated(List<DataItem> dataItems) {
+		subscriptionModel.onDataItemsCreated(dataItems);
+	}
 
-    @Override
-    public void onMonitoringModeChanged(List<MonitoredItem> monitoredItems) {
-        subscriptionModel.onMonitoringModeChanged(monitoredItems);
-    }
+	@Override
+	public void onDataItemsModified(List<DataItem> dataItems) {
+		subscriptionModel.onDataItemsModified(dataItems);
+	}
 
-    @Override
-    public Optional<MethodInvocationHandler> getInvocationHandler(NodeId methodId) {
-        Optional<ServerNode> node = server.getNodeMap().getNode(methodId);
+	@Override
+	public void onDataItemsDeleted(List<DataItem> dataItems) {
+		subscriptionModel.onDataItemsDeleted(dataItems);
+	}
 
-        return node.flatMap(n -> {
-            if (n instanceof UaMethodNode) {
-                return ((UaMethodNode) n).getInvocationHandler();
-            } else {
-                return Optional.empty();
-            }
-        });
-    }
+	@Override
+	public void onMonitoringModeChanged(List<MonitoredItem> monitoredItems) {
+		subscriptionModel.onMonitoringModeChanged(monitoredItems);
+	}
+
+	@Override
+	public Optional<MethodInvocationHandler> getInvocationHandler(NodeId methodId) {
+		Optional<ServerNode> node = server.getNodeMap().getNode(methodId);
+
+		return node.flatMap(n -> {
+			if (n instanceof UaMethodNode) {
+				return ((UaMethodNode) n).getInvocationHandler();
+			} else {
+				return Optional.empty();
+			}
+		});
+	}
 
 }
