@@ -59,6 +59,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 
 import de.loosensimnetz.iot.raspi.motor.Motor;
+import de.loosensimnetz.iot.raspi.motor.Motor.LedState;
 
 public class RaspiServerNamespace implements Namespace {
 
@@ -109,9 +110,21 @@ public class RaspiServerNamespace implements Namespace {
 			// Add the motor nodes
 			addMotorNodes(folderNode);
 
-			// Add the led nodes
-			addLedNodes(folderNode, 1);
-			addLedNodes(folderNode, 2);
+			// Create a "Leds" folder and add it to the "RaspiServer" folder
+			NodeId ledFolderNodeId = new NodeId(namespaceIndex, "RaspiServer/Leds");
+
+			UaFolderNode ledFolderNode = new UaFolderNode(server.getNodeMap(), ledFolderNodeId,
+					new QualifiedName(namespaceIndex, "RaspiServer/Leds"), LocalizedText.english("Leds"));
+
+			server.getNodeMap().addNode(ledFolderNode);
+
+			// Make sure our new folder shows up under the server's Objects folder
+			server.getUaNamespace().addReference(Identifiers.ObjectsFolder, Identifiers.Organizes, true,
+					ledFolderNodeId.expanded(), NodeClass.Object);			
+			
+			// Add the led nodes			
+			addLedNodes(ledFolderNode, 1);
+			addLedNodes(ledFolderNode, 2);
 		} catch (UaException e) {
 			logger.error("Error adding nodes: {}", e.getMessage(), e);
 		}
@@ -168,21 +181,24 @@ public class RaspiServerNamespace implements Namespace {
 	
 	private void addLedNodes(UaFolderNode folderNode, int ledNumber) {
 		String ledName = "Led" + ledNumber;
-		String folderId = "RaspiServer/Leds/" + ledName;
-		String methodName = "turnLedOn(x)";
+		String folderId = folderNode.getNodeId().getIdentifier() + "/" + ledName;	// "RaspiServer/Leds/"
+		String methodName = "turnOn(x)";
 		String methodId = folderId + "/"+ methodName;
 		
-		UaFolderNode ledsFolder = new UaFolderNode(server.getNodeMap(),
-				new NodeId(namespaceIndex, folderId), new QualifiedName(namespaceIndex, ledName),
-				LocalizedText.english("Led number " + ledNumber));
+		UaFolderNode ledFolder = new UaFolderNode(server.getNodeMap(),
+				new NodeId(namespaceIndex, folderId), new QualifiedName(namespaceIndex, folderId),
+				LocalizedText.english("Led number " + ledNumber));	
 		
+		folderNode.addOrganizes(ledFolder);
+		
+		// Method node for method turnLed<X>On(x) - <X> either 1 or 2
 		UaMethodNode methodNode = UaMethodNode.builder(server.getNodeMap())
 				.setNodeId(new NodeId(namespaceIndex, methodId))
 				.setBrowseName(new QualifiedName(namespaceIndex, methodName))
 				.setDisplayName(new LocalizedText(null, methodName))
 				.setDescription(
 						LocalizedText.english("Turns the led on (x = true) or off (x = false). Returns the state of the led before the invocation."))
-				.build();
+				.build();		
 
 		try {
 			AnnotationBasedInvocationHandler invocationHandler = AnnotationBasedInvocationHandler
@@ -192,16 +208,27 @@ public class RaspiServerNamespace implements Namespace {
 			methodNode.setProperty(UaMethodNode.OutputArguments, invocationHandler.getOutputArguments());
 			methodNode.setInvocationHandler(invocationHandler);
 
-			server.getNodeMap().addNode(methodNode);
-
-			folderNode.addReference(new Reference(folderNode.getNodeId(), Identifiers.HasComponent,
+			server.getNodeMap().addNode(methodNode);			
+			ledFolder.addOrganizes(methodNode);
+			
+			ledFolder.addReference(new Reference(ledFolder.getNodeId(), Identifiers.HasComponent,
 					methodNode.getNodeId().expanded(), methodNode.getNodeClass(), true));
 
 			methodNode.addReference(new Reference(methodNode.getNodeId(), Identifiers.HasComponent,
-					folderNode.getNodeId().expanded(), folderNode.getNodeClass(), false));
+					ledFolder.getNodeId().expanded(), ledFolder.getNodeClass(), false));
 		} catch (Exception e) {
-			logger.error("Error creating sqrt() method.", e);
+			logger.error("Error creating " + methodName + "() method.", e);
 		}
+		
+		// Dynamic Boolean LedOn
+		LedStateBoolean ledStateBoolean = new LedStateBoolean(motor, ledNumber);
+		
+		addDynamicBoolean(ledFolder, "LedOn", AttributeDelegateChain.create(new AttributeDelegate() {
+			@Override
+			public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
+				return new DataValue(new Variant(ledStateBoolean.getState()));
+			}
+		}, ValueLoggingDelegate::new));
 	}
 
 	/**
@@ -221,7 +248,7 @@ public class RaspiServerNamespace implements Namespace {
 		Variant variant = new Variant(false);
 
 		UaVariableNode node = new UaVariableNode.UaVariableNodeBuilder(server.getNodeMap())
-				.setNodeId(new NodeId(namespaceIndex, "RaspiServer/Motor/" + name))
+				.setNodeId(new NodeId(namespaceIndex, dynamicFolder.getNodeId().getIdentifier() + "/" + name))
 				.setAccessLevel(ubyte(AccessLevel.getMask(AccessLevel.READ_ONLY)))
 				.setBrowseName(new QualifiedName(namespaceIndex, name)).setDisplayName(LocalizedText.english(name))
 				.setDataType(typeId).setTypeDefinition(Identifiers.BaseDataVariableType).build();

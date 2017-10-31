@@ -1,0 +1,34 @@
+package de.loosensimnetz.iot.raspi;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import de.loosensimnetz.iot.raspi.motor.Motor;
+import de.loosensimnetz.iot.raspi.motor.Motor.LedState;
+
+public class LedStateBoolean {
+	private final Motor motor;
+	private final int ledNumber;
+	private final Logger logger = LoggerFactory.getLogger(getClass());
+
+	public LedStateBoolean(Motor motor, int ledNumber) {
+		this.motor = motor;
+		this.ledNumber = ledNumber;
+	}
+	    
+    public boolean getState() {
+
+        logger.debug("Returning the value of ledState{}.", ledNumber);
+        
+        if (ledNumber == 1) {
+        	return motor.getLed1State() == LedState.ON;
+        }
+        
+        if (ledNumber == 2) {
+        	return motor.getLed2State() == LedState.ON;
+        }
+        
+        return false;
+    }
+
+}

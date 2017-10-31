@@ -5,6 +5,9 @@ import static org.eclipse.milo.opcua.sdk.server.api.config.OpcUaServerConfig.USE
 import static org.eclipse.milo.opcua.sdk.server.api.config.OpcUaServerConfig.USER_TOKEN_POLICY_USERNAME;
 
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringBufferInputStream;
+import java.io.StringWriter;
 import java.util.EnumSet;
 import java.util.concurrent.CompletableFuture;
 
@@ -28,6 +31,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
+import de.loosensimnetz.iot.RaspiConstants;
+import de.loosensimnetz.iot.raspi.motor.Motor;
 import de.loosensimnetz.iot.raspi.motor.RaspiMotor;
 
 /**
@@ -35,7 +40,6 @@ import de.loosensimnetz.iot.raspi.motor.RaspiMotor;
  *
  */
 public class RaspiServer {
-	public static final String PROPERTY_MOTORFACTORY = "de.loosensimnetz.iot.raspi.SensorFactory";
 	public static final String TEXT_MANUFACTURER_NAME = "www.loosensimnetz.de";
 	public static final String TEXT_APPLICATION_NAME = "J. Loosen IoT Raspi Server";
 	public static final String TEXT_APPLICATION_URI = "urn:loosensimnetz.de:iot:raspi:server";
@@ -117,7 +121,7 @@ public class RaspiServer {
             .build();
 
         server = new OpcUaServer(serverConfig);
-        RaspiMotor motorSensor = new RaspiMotor();
+        Motor motorSensor = createMotor();
         
         server.getNamespaceManager().registerAndAdd(
             RaspiServerNamespace.NAMESPACE_URI,
@@ -139,6 +143,30 @@ public class RaspiServer {
             service.setResponse(new TestStackExResponse(header, request.getInput()));
         });
     }
+
+	private Motor createMotor() {
+		String motorFactoryName = 
+				System.getProperty(RaspiConstants.PROPERTY_MOTORFACTORY, 
+						RaspiConstants.PROPERTY_VALUE_DEFAULT_MOTORFACTORY);
+			
+		try {
+			MotorFactory motorFactory = (MotorFactory) Class.forName(motorFactoryName).newInstance();
+			Motor result = motorFactory.createMotor();
+			
+			logger.info("Instanciated motor class {}", result.getClass().getName());
+			
+			return result;
+		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			
+			e.printStackTrace(pw);
+			
+			logger.error("Could not instanciate MotorFactory class {}:\n{}.", motorFactoryName, sw.toString());
+			
+			throw new RuntimeException("Could not instanciate MotorFactory class");
+		}
+	}
 
 	public OpcUaServer getServer() {
         return server;
