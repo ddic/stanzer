@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.loosensimnetz.iot.raspi.motor.Motor;
+import de.loosensimnetz.iot.raspi.motor.MotorSensor;
 
 public class MotorStateMovingDown extends MotorState {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -19,23 +20,34 @@ public class MotorStateMovingDown extends MotorState {
 	}
 
 	@Override
-	public void update(Motor motor, long updateTime) {
-		long timeElapsed = this.getUpdateTime() - updateTime;
+	public void update(MotorSensor sensor, long updateTime) {
+		final Motor motor = sensor.getMotor();
+		long timeElapsed = updateTime - sensor.getUpdateTime();		
 		long earliestStateChange = motor.getExpectedTimeDown() - motor.getTolerance();
 		long latestStateChange = motor.getExpectedTimeUp() + motor.getTolerance();
 		
 		if (!motor.isMovingDown() && timeElapsed < earliestStateChange) {
 			// Motor stopped too early
-			logger.info("Motor stopped to early - stop after {} ms, did not expect stop before {} ms.", timeElapsed, earliestStateChange);
+			logger.info("Motor stopped too early - stop after {} ms, did not expect stop before {} ms.", timeElapsed, earliestStateChange);
 			
-			changeState(MotorStateError.instance(), updateTime);
+			changeState(sensor, MotorStateError.instance(), updateTime);
+			return;
 		}
 		
 		if (motor.isMovingDown() && timeElapsed > latestStateChange) {
 			// Motor is taking too long
 			logger.info("Motor is taking too long - still running after {} ms, expect stop after {} ms.", timeElapsed, latestStateChange);
 			
-			changeState(MotorStateError.instance(), updateTime);
+			changeState(sensor, MotorStateError.instance(), updateTime);
+			return;
+		}
+		
+		if (! motor.isMovingDown() && ! motor.isMovingUp() && timeElapsed < latestStateChange) {
+			// Motor stopped within tolerance
+			logger.info("Motor stopped at {} within tolerance (from {} to {}) - changing state to MotorStateStoppedDown.", timeElapsed, earliestStateChange, latestStateChange);
+			
+			changeState(sensor, MotorStateError.instance(), updateTime);
+			return;
 		}
 		
 		if (motor.isMovingDown() && timeElapsed < latestStateChange) {
@@ -46,6 +58,6 @@ public class MotorStateMovingDown extends MotorState {
 		// Motor is in some kind of unexpected error state
 		logger.info("Motor is in unexpected error state");
 		
-		changeState(MotorStateError.instance(), updateTime);
+		changeState(sensor, MotorStateError.instance(), updateTime);
 	}
 }

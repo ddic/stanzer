@@ -13,7 +13,15 @@ public class MockMotor implements Motor {
 	private long expectedTimeUp, expectedTimeDown, tolerance;
 	
 	public MockMotor() {
-		this(false, false, LedState.OFF, LedState.OFF, 8000L, 8000L);
+		this(false, false, LedState.OFF, LedState.OFF, 5000L, 5000L);
+	}
+
+	public void setMovingDown(boolean movingDown) {
+		this.movingDown = movingDown;
+	}
+
+	public void setMovingUp(boolean movingUp) {
+		this.movingUp = movingUp;
 	}
 
 	public MockMotor(boolean movingDown, boolean movingUp, LedState led1State, LedState led2State, long maxTimeUp, long maxTimeDown) {

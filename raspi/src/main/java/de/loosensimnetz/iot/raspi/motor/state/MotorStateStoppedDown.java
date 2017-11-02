@@ -5,17 +5,17 @@ import org.slf4j.LoggerFactory;
 
 import de.loosensimnetz.iot.raspi.motor.MotorSensor;
 
-public class MotorStateStoppedInitial extends MotorState {
+public class MotorStateStoppedDown extends MotorState {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
-	private static final MotorStateStoppedInitial instance = new MotorStateStoppedInitial();
+	private static final MotorStateStoppedDown instance = new MotorStateStoppedDown();
 	
-	protected MotorStateStoppedInitial() {
+	protected MotorStateStoppedDown() {
 		
 	}
 
-	public static MotorStateStoppedInitial instance() {
-		return MotorStateStoppedInitial.instance;
+	public static MotorStateStoppedDown instance() {
+		return MotorStateStoppedDown.instance;
 	}
 
 	@Override
@@ -25,11 +25,11 @@ public class MotorStateStoppedInitial extends MotorState {
 			return;
 		}
 		
-		if (sensor.getMotor().isMovingDown()) {
-			// From the initial state the motor can only move down - MovingDown state
-			logger.info("Motor ist starting to move down at {} ms - changing state to MovingDown", updateTime);
+		if (sensor.getMotor().isMovingUp()) {
+			// From the down state the motor can only move up - MovingUp state
+			logger.info("Motor ist starting to move up at {} ms - changing state to MovingUp", updateTime);
 			
-			changeState(sensor, MotorStateMovingDown.instance(), updateTime);
+			changeState(sensor, MotorStateMovingUp.instance(), updateTime);
 			return;
 		}
 		

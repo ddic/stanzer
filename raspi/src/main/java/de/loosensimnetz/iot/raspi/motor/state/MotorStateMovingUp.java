@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.loosensimnetz.iot.raspi.motor.Motor;
+import de.loosensimnetz.iot.raspi.motor.MotorSensor;
 
 public class MotorStateMovingUp extends MotorState {
 	private static final MotorStateMovingUp instance = new MotorStateMovingUp();
@@ -18,8 +19,9 @@ public class MotorStateMovingUp extends MotorState {
 	}
 
 	@Override
-	public void update(Motor motor, long updateTime) {
-		long timeElapsed = this.getUpdateTime() - updateTime;
+	public void update(MotorSensor sensor, long updateTime) {
+		final Motor motor = sensor.getMotor();
+		long timeElapsed = sensor.getUpdateTime() - updateTime;
 		long earliestStateChange = motor.getExpectedTimeUp() - motor.getTolerance();
 		long latestStateChange = motor.getExpectedTimeUp() + motor.getTolerance();
 		
@@ -27,14 +29,16 @@ public class MotorStateMovingUp extends MotorState {
 			// Motor stopped too early
 			logger.info("Motor stopped to early - stop after {} ms, did not expect stop before {} ms.", timeElapsed, earliestStateChange);
 			
-			changeState(MotorStateError.instance(), updateTime);
+			changeState(sensor, MotorStateError.instance(), updateTime);
+			return;
 		}
 		
 		if (motor.isMovingUp() && timeElapsed > latestStateChange) {
 			// Motor is taking too long
 			logger.info("Motor is taking too long - still running after {} ms, expect stop after {} ms.", timeElapsed, latestStateChange);
 			
-			changeState(MotorStateError.instance(), updateTime);
+			changeState(sensor, MotorStateError.instance(), updateTime);
+			return;
 		}
 		
 		if (motor.isMovingUp() && timeElapsed < latestStateChange) {
@@ -43,9 +47,9 @@ public class MotorStateMovingUp extends MotorState {
 		}
 		
 		// Motor is in some kind of unexpected error state
-		logger.info("Motor is in unexpected error state");
+		logger.info("Motor is in unexpected error state at {}", updateTime);
 		
-		changeState(MotorStateError.instance(), updateTime);
+		changeState(sensor, MotorStateError.instance(), updateTime);
 	}
 
 }
