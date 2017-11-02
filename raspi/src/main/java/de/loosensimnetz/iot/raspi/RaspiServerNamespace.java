@@ -59,7 +59,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 
 import de.loosensimnetz.iot.raspi.motor.Motor;
-import de.loosensimnetz.iot.raspi.motor.Motor.LedState;
 
 public class RaspiServerNamespace implements Namespace {
 

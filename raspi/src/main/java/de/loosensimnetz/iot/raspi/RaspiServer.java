@@ -6,7 +6,6 @@ import static org.eclipse.milo.opcua.sdk.server.api.config.OpcUaServerConfig.USE
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.io.StringBufferInputStream;
 import java.io.StringWriter;
 import java.util.EnumSet;
 import java.util.concurrent.CompletableFuture;
@@ -33,7 +32,6 @@ import com.google.common.collect.ImmutableList;
 
 import de.loosensimnetz.iot.RaspiConstants;
 import de.loosensimnetz.iot.raspi.motor.Motor;
-import de.loosensimnetz.iot.raspi.motor.RaspiMotor;
 
 /**
  * Hello world!

@@ -4,25 +4,38 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.loosensimnetz.iot.raspi.motor.Motor;
-import de.loosensimnetz.iot.raspi.motor.Motor.LedState;
 
 public class MockMotor implements Motor {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
-	private boolean movingDown, movingUp;
-	
+	private boolean movingDown, movingUp;	
 	private LedState led1State, led2State;
+	private long expectedTimeUp, expectedTimeDown, tolerance;
 	
 	public MockMotor() {
-		this(false, false, LedState.OFF, LedState.OFF);
+		this(false, false, LedState.OFF, LedState.OFF, 8000L, 8000L);
 	}
 
-	public MockMotor(boolean movingDown, boolean movingUp, LedState led1State, LedState led2State) {
+	public MockMotor(boolean movingDown, boolean movingUp, LedState led1State, LedState led2State, long maxTimeUp, long maxTimeDown) {
 		super();
 		this.movingDown = movingDown;
 		this.movingUp = movingUp;
 		this.led1State = led1State;
 		this.led2State = led2State;
+		this.expectedTimeDown = maxTimeDown;
+		this.expectedTimeUp = maxTimeUp;
+	}
+	
+	@Override
+	public long getTolerance() {
+		return tolerance;
+	}
+
+	@Override
+	public void setTolerance(long tolerance) {
+		this.tolerance = tolerance;
+		
+		logger.info("Setting tolerance to {}.", tolerance);
 	}
 
 	@Override
@@ -59,4 +72,27 @@ public class MockMotor implements Motor {
 		logger.info("Setting state of led #2 to {}.", state.toString());
 	}
 
+	@Override
+	public long getExpectedTimeUp() {
+		return expectedTimeUp;
+	}
+
+	@Override
+	public void setExpectedTimeUp(long maxTimeUp) {
+		this.expectedTimeUp = maxTimeUp;
+		
+		logger.info("Setting expected time up to {}.", maxTimeUp);
+	}
+
+	@Override
+	public long getExpectedTimeDown() {
+		return expectedTimeDown;
+	}
+
+	@Override
+	public void setExpectedTimeDown(long maxTimeDown) {
+		this.expectedTimeDown = maxTimeDown;
+		
+		logger.info("Setting expected time down to {}.", maxTimeDown);
+	}	
 }
