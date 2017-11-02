@@ -25,6 +25,20 @@ public interface Motor {
 	long getExpectedTimeDown();
 	
 	/**
+	 * Set the expected time for the motor in lower end position
+	 * 
+	 * @param expectedTimeStoppedDown Expected time for the motor in lower end position
+	 */
+	void setExpectedTimeStoppedDown(long expectedTimeStoppedDown);
+	
+	/**
+	 * Get the expected time for the motor in lower end position
+	 * 
+	 * @return Expected time for the motor in lower end position
+	 */
+	long getExpectedTimeStoppedDown(); 
+	
+	/**
 	 * Set the expected time in milliseconds for the motor to move from the initial position downward
 	 * to the lower end position
 	 * 

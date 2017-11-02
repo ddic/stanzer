@@ -17,7 +17,7 @@ public class RaspiMotor implements Motor {
 	private final GpioController gpio;
 	private final GpioPinDigitalOutput ledPin1;
 	private final GpioPinDigitalOutput ledPin2;
-	private long expectedTimeUp, expectedTimeDown, tolerance;
+	private long expectedTimeUp, expectedTimeDown, expectedTimeStoppedDown, tolerance;
 	
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -25,6 +25,18 @@ public class RaspiMotor implements Motor {
 		this(8000L, 8000L);
 	}
 	
+	@Override
+	public long getExpectedTimeStoppedDown() {
+		return expectedTimeStoppedDown;
+	}
+
+	@Override
+	public void setExpectedTimeStoppedDown(long expectedTimeStoppedDown) {
+		this.expectedTimeStoppedDown = expectedTimeStoppedDown;
+	}
+
+
+
 	public RaspiMotor(long maxTimeUp, long maxTimeDown) {
     	gpio = GpioFactory.getInstance();
     	

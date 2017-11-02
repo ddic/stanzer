@@ -1,11 +1,18 @@
 package de.loosensimnetz.iot.raspi.motor.state;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import de.loosensimnetz.iot.raspi.motor.Motor;
+import de.loosensimnetz.iot.raspi.motor.MotorSensor;
 
 public class MotorStateStoppedInitial extends MotorState {
+	private final Logger logger = LoggerFactory.getLogger(getClass());
+	
 	private static final MotorStateStoppedInitial instance = new MotorStateStoppedInitial();
 	
-	protected MotorStateStoppedInitial() {		
+	protected MotorStateStoppedInitial() {
+		
 	}
 
 	public static MotorStateStoppedInitial instance() {
@@ -13,7 +20,9 @@ public class MotorStateStoppedInitial extends MotorState {
 	}
 
 	@Override
-	public void update(Motor motor, long updateTime) {
+	public void update(MotorSensor sensor, long updateTime) {		
+		final Motor motor = sensor.getMotor();
+		
 		if (! motor.isMovingDown() && ! motor.isMovingUp()) {
 			// Motor is still not moving - no state change
 			return;
@@ -21,10 +30,15 @@ public class MotorStateStoppedInitial extends MotorState {
 		
 		if (motor.isMovingDown()) {
 			// From the initial state the motor can only move down - MovingDown state
-			changeState(MotorStateMovingDown.instance(), updateTime);
+			logger.info("Motor is starting to move down at {} ms - changing state to MovingDown", updateTime);
+			
+			changeState(sensor, MotorStateMovingDown.instance(), updateTime);
+			return;
 		}
 		
 		// We must be in an error state
-		changeState(MotorStateError.instance(), updateTime);
+		logger.info("Motor is in unexpected error state at {} ms", updateTime);
+		
+		changeState(sensor, MotorStateError.instance(), updateTime);
 	}
 }

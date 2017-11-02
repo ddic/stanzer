@@ -10,20 +10,40 @@ public class MockMotor implements Motor {
 	
 	private boolean movingDown, movingUp;	
 	private LedState led1State, led2State;
-	private long expectedTimeUp, expectedTimeDown, tolerance;
+	private long expectedTimeUp, expectedTimeDown, expectedTimeStoppedDown, tolerance;
 	
 	public MockMotor() {
-		this(false, false, LedState.OFF, LedState.OFF, 8000L, 8000L);
+		this(false, false, LedState.OFF, LedState.OFF, 5000L, 5000L, 1000L, 0L);
 	}
 
-	public MockMotor(boolean movingDown, boolean movingUp, LedState led1State, LedState led2State, long maxTimeUp, long maxTimeDown) {
+	public void setMovingDown(boolean movingDown) {
+		this.movingDown = movingDown;
+	}
+	
+	@Override
+	public long getExpectedTimeStoppedDown() {
+		return expectedTimeStoppedDown;
+	}
+
+	@Override
+	public void setExpectedTimeStoppedDown(long expectedTimeStoppedDown) {
+		this.expectedTimeStoppedDown = expectedTimeStoppedDown;
+	}
+
+	public void setMovingUp(boolean movingUp) {
+		this.movingUp = movingUp;
+	}
+
+	public MockMotor(boolean movingDown, boolean movingUp, LedState led1State, LedState led2State, long expectedTimeUp, long expectedTimeDown, long expectedTimeStoppedDown, long tolerance) {
 		super();
 		this.movingDown = movingDown;
 		this.movingUp = movingUp;
 		this.led1State = led1State;
 		this.led2State = led2State;
-		this.expectedTimeDown = maxTimeDown;
-		this.expectedTimeUp = maxTimeUp;
+		this.expectedTimeDown = expectedTimeDown;
+		this.expectedTimeUp = expectedTimeUp;
+		this.expectedTimeStoppedDown = expectedTimeStoppedDown;
+		this.tolerance = tolerance;
 	}
 	
 	@Override
