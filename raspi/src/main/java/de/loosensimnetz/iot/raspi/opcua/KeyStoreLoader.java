@@ -11,7 +11,7 @@
  *   http://www.eclipse.org/org/documents/edl-v10.html.
  */
 
-package de.loosensimnetz.iot.raspi;
+package de.loosensimnetz.iot.raspi.opcua;
 
 import java.security.Key;
 import java.security.KeyPair;

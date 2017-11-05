@@ -1,4 +1,4 @@
-package de.loosensimnetz.iot.raspi;
+package de.loosensimnetz.iot.raspi.debug;
 
 import com.pi4j.io.gpio.RaspiPin;
 import com.pi4j.io.gpio.GpioPinDigitalOutput;

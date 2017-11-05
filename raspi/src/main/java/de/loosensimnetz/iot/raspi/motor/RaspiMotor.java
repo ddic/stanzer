@@ -5,12 +5,12 @@ import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.io.gpio.GpioPinDigitalOutput;
 import com.pi4j.io.gpio.PinState;
 import com.pi4j.io.gpio.RaspiPin;
-import static de.loosensimnetz.iot.raspi.motor.LedStateConverter.pinStateToLedState;
+
+import static de.loosensimnetz.iot.raspi.led.LedStateConverter.ledStateToPinState;
+import static de.loosensimnetz.iot.raspi.led.LedStateConverter.pinStateToLedState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static de.loosensimnetz.iot.raspi.motor.LedStateConverter.ledStateToPinState;
 
 public class RaspiMotor implements Motor {
 	

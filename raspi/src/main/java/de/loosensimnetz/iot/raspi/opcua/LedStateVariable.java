@@ -1,4 +1,4 @@
-package de.loosensimnetz.iot.raspi;
+package de.loosensimnetz.iot.raspi.opcua;
 
 import org.eclipse.milo.opcua.sdk.server.annotations.UaInputArgument;
 import org.eclipse.milo.opcua.sdk.server.annotations.UaMethod;

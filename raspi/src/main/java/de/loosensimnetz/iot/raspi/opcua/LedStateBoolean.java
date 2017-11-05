@@ -1,4 +1,4 @@
-package de.loosensimnetz.iot.raspi;
+package de.loosensimnetz.iot.raspi.opcua;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

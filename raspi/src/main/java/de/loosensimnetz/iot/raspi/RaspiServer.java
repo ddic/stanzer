@@ -32,6 +32,9 @@ import com.google.common.collect.ImmutableList;
 
 import de.loosensimnetz.iot.RaspiConstants;
 import de.loosensimnetz.iot.raspi.motor.Motor;
+import de.loosensimnetz.iot.raspi.motor.MotorFactory;
+import de.loosensimnetz.iot.raspi.opcua.KeyStoreLoader;
+import de.loosensimnetz.iot.raspi.opcua.RaspiServerNamespace;
 
 /**
  * Hello world!
