@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import de.loosensimnetz.iot.raspi.motor.Motor;
 import de.loosensimnetz.iot.raspi.motor.Motor.LedState;
 
-public class LedStateMethod {
+public class LedStateMethod implements OpcMethod {
 	private final Motor motor;
 	private final int ledNumber;
 	private final Logger logger = LoggerFactory.getLogger(getClass());

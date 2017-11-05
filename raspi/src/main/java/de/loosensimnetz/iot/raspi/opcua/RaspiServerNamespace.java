@@ -59,6 +59,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 
 import de.loosensimnetz.iot.raspi.motor.Motor;
+import de.loosensimnetz.iot.raspi.opcua.ExpectedTimeMethod.TimeType;
 
 public class RaspiServerNamespace implements Namespace {
 
@@ -119,9 +120,9 @@ public class RaspiServerNamespace implements Namespace {
 
 			// Make sure our new folder shows up under the server's Objects folder
 			server.getUaNamespace().addReference(Identifiers.ObjectsFolder, Identifiers.Organizes, true,
-					ledFolderNodeId.expanded(), NodeClass.Object);			
-			
-			// Add the led nodes			
+					ledFolderNodeId.expanded(), NodeClass.Object);
+
+			// Add the led nodes
 			addLedNodes(ledFolderNode, 1);
 			addLedNodes(ledFolderNode, 2);
 		} catch (UaException e) {
@@ -146,108 +147,163 @@ public class RaspiServerNamespace implements Namespace {
 	 *            Root folder
 	 */
 	private void addMotorNodes(UaFolderNode rootNode) {
-		UaFolderNode dynamicFolder = new UaFolderNode(server.getNodeMap(),
+		UaFolderNode motorFolder = new UaFolderNode(server.getNodeMap(),
 				new NodeId(namespaceIndex, "RaspiServer/Motor"), new QualifiedName(namespaceIndex, "Motor"),
 				LocalizedText.english("Motor"));
 
-		server.getNodeMap().addNode(dynamicFolder);
-		rootNode.addOrganizes(dynamicFolder);
+		server.getNodeMap().addNode(motorFolder);
+		rootNode.addOrganizes(motorFolder);
 
-		addMotorVariables(dynamicFolder);
+		addMotorVariables(motorFolder);
+		addMotorMethods(motorFolder);
+	}
+
+	/**
+	 * 
+	 * @param folder
+	 */
+	private void addMotorMethods(UaFolderNode folderNode) {
+		// Method setExpectedTimeDown
+		String methodName = "setExpectedTimeDown(expectedTime, tolerance)";
+		String methodId = folderNode.getNodeId().getIdentifier() + "/" + methodName; // "RaspiServer/Motor" + "/" +
+																						// "setExpectedTimeDown"
+		addMethod(methodName, methodId, folderNode, new ExpectedTimeMethod(motor, TimeType.TIME_DOWN),
+				"Set the expected time and tolerance in milliseconds for the motor to move from the initial position downward to the lower end position. Returns the values before the invocation.");
+
+		// Method setExpectedTimeStoppedDown
+		methodName = "setExpectedTimeStoppedDown(expectedTime, tolerance)";
+		methodId = folderNode.getNodeId().getIdentifier() + "/" + methodName; // "RaspiServer/Motor" + "/" +
+																				// "setExpectedTimeStoppedDown"
+		addMethod(methodName, methodId, folderNode, new ExpectedTimeMethod(motor, TimeType.TIME_STOPPED_DOWN),
+				"Set the expected time and tolerance in milliseconds for the motor in lower end position. Returns the values before the invocation.");
+
+		// Method setExpectedTimeUp
+		methodName = "setExpectedTimeUp(expectedTime, tolerance)";
+		methodId = folderNode.getNodeId().getIdentifier() + "/" + methodName; // "RaspiServer/Motor" + "/" +
+																				// "setExpectedTimeUp"
+		addMethod(methodName, methodId, folderNode, new ExpectedTimeMethod(motor, TimeType.TIME_UP),
+				"Set the expected time and tolerance in milliseconds for the motor to move from the lower end position upward to the initial position. Returns the values before the invocation.");
 	}
 
 	/**
 	 * Add the variables for the motor folder
 	 * 
-	 * @param dynamicFolder Motor folder ("RaspiServer/Motor")
+	 * @param dynamicFolder
+	 *            Motor folder ("RaspiServer/Motor")
 	 */
 	private void addMotorVariables(UaFolderNode dynamicFolder) {
-		// Dynamic Long ExpectedTimeDown
-		// Dynamic Long ExpectedTimeDown
-		// Dynamic Long ExpectedTimeUp
-		// Dynamic Long Tolerance
-		
 		// Dynamic Boolean MotorDown
-		addDynamicVariable(dynamicFolder, Identifiers.Boolean, "MotorDown", AttributeDelegateChain.create(new AttributeDelegate() {
-			@Override
-			public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
-				return new DataValue(new Variant(motor.isMovingDown()));
-			}
-		}, ValueLoggingDelegate::new));
+		addDynamicVariable(dynamicFolder, Identifiers.Boolean, "MotorDown",
+				AttributeDelegateChain.create(new AttributeDelegate() {
+					@Override
+					public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
+						return new DataValue(new Variant(motor.isMovingDown()));
+					}
+				}, ValueLoggingDelegate::new));
 
 		// Dynamic Boolean MotorUp
-		addDynamicVariable(dynamicFolder, Identifiers.Boolean, "MotorUp", AttributeDelegateChain.create(new AttributeDelegate() {
-			@Override
-			public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
-				return new DataValue(new Variant(motor.isMovingUp()));
-			}
-		}, ValueLoggingDelegate::new));
+		addDynamicVariable(dynamicFolder, Identifiers.Boolean, "MotorUp",
+				AttributeDelegateChain.create(new AttributeDelegate() {
+					@Override
+					public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
+						return new DataValue(new Variant(motor.isMovingUp()));
+					}
+				}, ValueLoggingDelegate::new));
 
 		// Dynamic Boolean MotorMoving
-		addDynamicVariable(dynamicFolder, Identifiers.Boolean, "MotorMoving", AttributeDelegateChain.create(new AttributeDelegate() {
-			@Override
-			public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
-				return new DataValue(new Variant(motor.isMovingUp() || motor.isMovingDown()));
-			}
-		}, ValueLoggingDelegate::new));
+		addDynamicVariable(dynamicFolder, Identifiers.Boolean, "MotorMoving",
+				AttributeDelegateChain.create(new AttributeDelegate() {
+					@Override
+					public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
+						return new DataValue(new Variant(motor.isMovingUp() || motor.isMovingDown()));
+					}
+				}, ValueLoggingDelegate::new));
 	}
-	
+
 	/**
 	 * Add the nodes for the two leds to the folder in our namespace
 	 * 
-	 * @param folderNode	Root folder for the leds ("RaspiServer/Leds")
-	 * @param ledNumber		Number of the led to add (1 or 2)
+	 * @param folderNode
+	 *            Root folder for the leds ("RaspiServer/Leds")
+	 * @param ledNumber
+	 *            Number of the led to add (1 or 2)
 	 */
 	private void addLedNodes(UaFolderNode folderNode, int ledNumber) {
 		String ledName = "Led" + ledNumber;
-		String folderId = folderNode.getNodeId().getIdentifier() + "/" + ledName;	// "RaspiServer/Leds/Led<#>"
+		String folderId = folderNode.getNodeId().getIdentifier() + "/" + ledName; // "RaspiServer/Leds/Led<#>"
 		String methodName = "turnOn(x)";
-		String methodId = folderId + "/"+ methodName;
-		
-		UaFolderNode ledFolder = new UaFolderNode(server.getNodeMap(),
-				new NodeId(namespaceIndex, folderId), new QualifiedName(namespaceIndex, folderId),
-				LocalizedText.english("Led number " + ledNumber));	
-		
+		String methodId = folderId + "/" + methodName;
+
+		UaFolderNode ledFolder = new UaFolderNode(server.getNodeMap(), new NodeId(namespaceIndex, folderId),
+				new QualifiedName(namespaceIndex, folderId), LocalizedText.english("Led number " + ledNumber));
+
 		folderNode.addOrganizes(ledFolder);
-		
+
 		// Method node for method turnLed<#>On(x) - <#> either 1 or 2
+		addMethod(methodName, methodId, ledFolder, new LedStateMethod(motor, ledNumber),
+				"Turns the led on (x = true) or off (x = false). Returns the state of the led before the invocation.");
+
+		// Dynamic Boolean LedOn
+		addLedVariable(ledNumber, ledFolder);
+	}
+
+	/**
+	 * Add method
+	 * 
+	 * @param methodName
+	 *            Method name
+	 * @param methodId
+	 *            ID of the method
+	 * @param methodFolder
+	 *            Led folder
+	 */
+	private void addMethod(String methodName, String methodId, UaFolderNode methodFolder, OpcMethod method,
+			String description) {
 		UaMethodNode methodNode = UaMethodNode.builder(server.getNodeMap())
 				.setNodeId(new NodeId(namespaceIndex, methodId))
 				.setBrowseName(new QualifiedName(namespaceIndex, methodName))
-				.setDisplayName(new LocalizedText(null, methodName))
-				.setDescription(
-						LocalizedText.english("Turns the led on (x = true) or off (x = false). Returns the state of the led before the invocation."))
-				.build();		
+				.setDisplayName(new LocalizedText(null, methodName)).setDescription(LocalizedText.english(description))
+				.build();
 
 		try {
 			AnnotationBasedInvocationHandler invocationHandler = AnnotationBasedInvocationHandler
-					.fromAnnotatedObject(server.getNodeMap(), new LedStateMethod(motor, ledNumber));
+					.fromAnnotatedObject(server.getNodeMap(), method);
 
 			methodNode.setProperty(UaMethodNode.InputArguments, invocationHandler.getInputArguments());
 			methodNode.setProperty(UaMethodNode.OutputArguments, invocationHandler.getOutputArguments());
 			methodNode.setInvocationHandler(invocationHandler);
 
-			server.getNodeMap().addNode(methodNode);			
-			ledFolder.addOrganizes(methodNode);
-			
-			ledFolder.addReference(new Reference(ledFolder.getNodeId(), Identifiers.HasComponent,
+			server.getNodeMap().addNode(methodNode);
+			methodFolder.addOrganizes(methodNode);
+
+			methodFolder.addReference(new Reference(methodFolder.getNodeId(), Identifiers.HasComponent,
 					methodNode.getNodeId().expanded(), methodNode.getNodeClass(), true));
 
 			methodNode.addReference(new Reference(methodNode.getNodeId(), Identifiers.HasComponent,
-					ledFolder.getNodeId().expanded(), ledFolder.getNodeClass(), false));
+					methodFolder.getNodeId().expanded(), methodFolder.getNodeClass(), false));
 		} catch (Exception e) {
 			logger.error("Error creating " + methodName + "() method.", e);
 		}
-		
-		// Dynamic Boolean LedOn
+	}
+
+	/**
+	 * Add led variable LenOn for led <#>
+	 * 
+	 * @param ledNumber
+	 *            Led number
+	 * @param ledFolder
+	 *            Led folder
+	 */
+	private void addLedVariable(int ledNumber, UaFolderNode ledFolder) {
 		LedStateBoolean ledStateBoolean = new LedStateBoolean(motor, ledNumber);
-		
-		addDynamicVariable(ledFolder, Identifiers.Boolean, "LedOn", AttributeDelegateChain.create(new AttributeDelegate() {
-			@Override
-			public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
-				return new DataValue(new Variant(ledStateBoolean.getState()));
-			}
-		}, ValueLoggingDelegate::new));
+
+		addDynamicVariable(ledFolder, Identifiers.Boolean, "LedOn",
+				AttributeDelegateChain.create(new AttributeDelegate() {
+					@Override
+					public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
+						return new DataValue(new Variant(ledStateBoolean.getState()));
+					}
+				}, ValueLoggingDelegate::new));
 	}
 
 	/**
@@ -261,7 +317,8 @@ public class RaspiServerNamespace implements Namespace {
 	 * @param attributeDelegate
 	 *            Delegate for the node value
 	 */
-	private void addDynamicVariable(UaFolderNode dynamicFolder, NodeId typeId, String nodeName, AttributeDelegate attributeDelegate) {
+	private void addDynamicVariable(UaFolderNode dynamicFolder, NodeId typeId, String nodeName,
+			AttributeDelegate attributeDelegate) {
 		String name = nodeName;
 		Variant variant = new Variant(false);
 
