@@ -153,8 +153,22 @@ public class RaspiServerNamespace implements Namespace {
 		server.getNodeMap().addNode(dynamicFolder);
 		rootNode.addOrganizes(dynamicFolder);
 
+		addMotorVariables(dynamicFolder);
+	}
+
+	/**
+	 * Add the variables for the motor folder
+	 * 
+	 * @param dynamicFolder Motor folder ("RaspiServer/Motor")
+	 */
+	private void addMotorVariables(UaFolderNode dynamicFolder) {
+		// Dynamic Long ExpectedTimeDown
+		// Dynamic Long ExpectedTimeDown
+		// Dynamic Long ExpectedTimeUp
+		// Dynamic Long Tolerance
+		
 		// Dynamic Boolean MotorDown
-		addDynamicBoolean(dynamicFolder, "MotorDown", AttributeDelegateChain.create(new AttributeDelegate() {
+		addDynamicVariable(dynamicFolder, Identifiers.Boolean, "MotorDown", AttributeDelegateChain.create(new AttributeDelegate() {
 			@Override
 			public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
 				return new DataValue(new Variant(motor.isMovingDown()));
@@ -162,7 +176,7 @@ public class RaspiServerNamespace implements Namespace {
 		}, ValueLoggingDelegate::new));
 
 		// Dynamic Boolean MotorUp
-		addDynamicBoolean(dynamicFolder, "MotorUp", AttributeDelegateChain.create(new AttributeDelegate() {
+		addDynamicVariable(dynamicFolder, Identifiers.Boolean, "MotorUp", AttributeDelegateChain.create(new AttributeDelegate() {
 			@Override
 			public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
 				return new DataValue(new Variant(motor.isMovingUp()));
@@ -170,7 +184,7 @@ public class RaspiServerNamespace implements Namespace {
 		}, ValueLoggingDelegate::new));
 
 		// Dynamic Boolean MotorMoving
-		addDynamicBoolean(dynamicFolder, "MotorMoving", AttributeDelegateChain.create(new AttributeDelegate() {
+		addDynamicVariable(dynamicFolder, Identifiers.Boolean, "MotorMoving", AttributeDelegateChain.create(new AttributeDelegate() {
 			@Override
 			public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
 				return new DataValue(new Variant(motor.isMovingUp() || motor.isMovingDown()));
@@ -178,9 +192,15 @@ public class RaspiServerNamespace implements Namespace {
 		}, ValueLoggingDelegate::new));
 	}
 	
+	/**
+	 * Add the nodes for the two leds to the folder in our namespace
+	 * 
+	 * @param folderNode	Root folder for the leds ("RaspiServer/Leds")
+	 * @param ledNumber		Number of the led to add (1 or 2)
+	 */
 	private void addLedNodes(UaFolderNode folderNode, int ledNumber) {
 		String ledName = "Led" + ledNumber;
-		String folderId = folderNode.getNodeId().getIdentifier() + "/" + ledName;	// "RaspiServer/Leds/"
+		String folderId = folderNode.getNodeId().getIdentifier() + "/" + ledName;	// "RaspiServer/Leds/Led<#>"
 		String methodName = "turnOn(x)";
 		String methodId = folderId + "/"+ methodName;
 		
@@ -190,7 +210,7 @@ public class RaspiServerNamespace implements Namespace {
 		
 		folderNode.addOrganizes(ledFolder);
 		
-		// Method node for method turnLed<X>On(x) - <X> either 1 or 2
+		// Method node for method turnLed<#>On(x) - <#> either 1 or 2
 		UaMethodNode methodNode = UaMethodNode.builder(server.getNodeMap())
 				.setNodeId(new NodeId(namespaceIndex, methodId))
 				.setBrowseName(new QualifiedName(namespaceIndex, methodName))
@@ -222,7 +242,7 @@ public class RaspiServerNamespace implements Namespace {
 		// Dynamic Boolean LedOn
 		LedStateBoolean ledStateBoolean = new LedStateBoolean(motor, ledNumber);
 		
-		addDynamicBoolean(ledFolder, "LedOn", AttributeDelegateChain.create(new AttributeDelegate() {
+		addDynamicVariable(ledFolder, Identifiers.Boolean, "LedOn", AttributeDelegateChain.create(new AttributeDelegate() {
 			@Override
 			public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
 				return new DataValue(new Variant(ledStateBoolean.getState()));
@@ -241,9 +261,8 @@ public class RaspiServerNamespace implements Namespace {
 	 * @param attributeDelegate
 	 *            Delegate for the node value
 	 */
-	private void addDynamicBoolean(UaFolderNode dynamicFolder, String nodeName, AttributeDelegate attributeDelegate) {
+	private void addDynamicVariable(UaFolderNode dynamicFolder, NodeId typeId, String nodeName, AttributeDelegate attributeDelegate) {
 		String name = nodeName;
-		NodeId typeId = Identifiers.Boolean;
 		Variant variant = new Variant(false);
 
 		UaVariableNode node = new UaVariableNode.UaVariableNodeBuilder(server.getNodeMap())

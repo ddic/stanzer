@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.loosensimnetz.iot.raspi.debug.MockMotor;
+import de.loosensimnetz.iot.raspi.motor.ExpectedTime;
 import de.loosensimnetz.iot.raspi.motor.Motor;
 import de.loosensimnetz.iot.raspi.motor.MotorSensor;
 
@@ -55,7 +56,7 @@ public class MotorSensorTest {
 		
 		MockMotor motor = new MockMotor();		
 		MotorSensor sensor = new MotorSensor(motor, 0L);
-		motor.setExpectedTimeDown(5000L);
+		motor.setExpectedTimeDown(new ExpectedTime(5000L, 0L));
 		
 		
 		// Begin moving downward

@@ -3,66 +3,52 @@ package de.loosensimnetz.iot.raspi.motor;
 public interface Motor {
 	
 	/**
-	 * Get the tolerance in milliseconds where the duration of a movement (i. e. down or up) is still acceptable
-	 *  
-	 * @return Tolerance in milliseconds 
-	 */
-	long getTolerance();
-	
-	/**
-	 * Set the tolerance in milliseconds where the duration of a movement (i. e. down or up) is still acceptable
-	 * 
-	 * @param tolerance Tolerance in milliseconds 
-	 */
-	void setTolerance(long tolerance);
-	
-	/**
-	 * Get the expected time in milliseconds for the motor to move from the initial position downward
+	 * Get the expected time and tolerance in milliseconds for the motor to move from the initial position downward
 	 * to the lower end position
 	 * 
 	 * @return
 	 */
-	long getExpectedTimeDown();
+	ExpectedTime getExpectedTimeDown();
 	
 	/**
-	 * Set the expected time for the motor in lower end position
+	 * Set the expected time and tolerance in milliseconds for the motor in lower end position
 	 * 
-	 * @param expectedTimeStoppedDown Expected time for the motor in lower end position
+	 * @param expectedTimeStoppedDown Expected time and tolerance in milliseconds for the motor in lower end position
 	 */
-	void setExpectedTimeStoppedDown(long expectedTimeStoppedDown);
+	void setExpectedTimeStoppedDown(ExpectedTime expectedTimeStoppedDown);
 	
 	/**
-	 * Get the expected time for the motor in lower end position
+	 * Get the expected time and tolerance in milliseconds for the motor in lower end position
 	 * 
-	 * @return Expected time for the motor in lower end position
+	 * @return Expected time and tolerance in milliseconds for the motor in lower end position
 	 */
-	long getExpectedTimeStoppedDown(); 
+	ExpectedTime getExpectedTimeStoppedDown(); 
 	
 	/**
-	 * Set the expected time in milliseconds for the motor to move from the initial position downward
+	 * Set the expected time and tolerance in milliseconds for the motor to move from the initial position downward
 	 * to the lower end position
 	 * 
-	 * @param expectedTimeUp Expected time in milliseconds for the motor to move from the initial position downward
+	 * @param expectedTimeUp Expected time and tolerance in milliseconds for the motor to move from the initial position downward
 	 * to the lower end position
 	 */
-	void setExpectedTimeDown(long expectedTimeDown);
+	void setExpectedTimeDown(ExpectedTime expectedTimeDown);
 	
 	/**
-	 * Get the expected time in milliseconds for the motor to move from the lower end position upward
+	 * Get the expected time and tolerance in milliseconds for the motor to move from the lower end position upward
 	 * to the initial position
 	 * 
 	 * @return
 	 */
-	long getExpectedTimeUp();
+	ExpectedTime getExpectedTimeUp();
 	
 	/**
-	 * Set the expected time in milliseconds for the motor to move from the lower end position upward
+	 * Set the expected time and tolerance in milliseconds for the motor to move from the lower end position upward
 	 * to the initial position	
 	 * 
-	 * @param expectedTimeUp Expected time in milliseconds for the motor to move from the lower end position upward
+	 * @param expectedTimeUp Expected time and tolerance in milliseconds for the motor to move from the lower end position upward
 	 * to the initial position
 	 */
-	void setExpectedTimeUp(long expectedTimeUp);
+	void setExpectedTimeUp(ExpectedTime expectedTimeUp);
 
 	/**
 	 * Is the motor moving downward?

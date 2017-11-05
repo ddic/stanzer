@@ -22,8 +22,8 @@ public class MotorStateMovingUp extends MotorState {
 	public void update(MotorSensor sensor, long updateTime) {
 		final Motor motor = sensor.getMotor();
 		long timeElapsed = sensor.getUpdateTime() - updateTime;
-		long earliestStateChange = motor.getExpectedTimeUp() - motor.getTolerance();
-		long latestStateChange = motor.getExpectedTimeUp() + motor.getTolerance();
+		long earliestStateChange = motor.getExpectedTimeUp().getExpectedTime() - motor.getExpectedTimeDown().getTolerance();
+		long latestStateChange = motor.getExpectedTimeUp().getExpectedTime() + motor.getExpectedTimeDown().getTolerance();
 		
 		if (!motor.isMovingUp() && timeElapsed < earliestStateChange) {
 			// Motor stopped too early

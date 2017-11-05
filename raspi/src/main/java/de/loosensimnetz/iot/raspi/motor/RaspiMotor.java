@@ -17,27 +17,27 @@ public class RaspiMotor implements Motor {
 	private final GpioController gpio;
 	private final GpioPinDigitalOutput ledPin1;
 	private final GpioPinDigitalOutput ledPin2;
-	private long expectedTimeUp, expectedTimeDown, expectedTimeStoppedDown, tolerance;
+	private ExpectedTime expectedTimeUp, expectedTimeDown, expectedTimeStoppedDown;
 	
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public RaspiMotor() {
-		this(8000L, 8000L);
+		this(new ExpectedTime(8000L, 1000L), new ExpectedTime(8000L, 1000L));
 	}
 	
 	@Override
-	public long getExpectedTimeStoppedDown() {
+	public ExpectedTime getExpectedTimeStoppedDown() {
 		return expectedTimeStoppedDown;
 	}
 
 	@Override
-	public void setExpectedTimeStoppedDown(long expectedTimeStoppedDown) {
+	public void setExpectedTimeStoppedDown(ExpectedTime expectedTimeStoppedDown) {
 		this.expectedTimeStoppedDown = expectedTimeStoppedDown;
 	}
 
 
 
-	public RaspiMotor(long maxTimeUp, long maxTimeDown) {
+	public RaspiMotor(ExpectedTime maxTimeUp, ExpectedTime maxTimeDown) {
     	gpio = GpioFactory.getInstance();
     	
     	ledPin1 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_02, PinState.HIGH);
@@ -49,38 +49,26 @@ public class RaspiMotor implements Motor {
         this.expectedTimeDown = maxTimeDown;
         this.expectedTimeUp = maxTimeUp;
     }
-    
-	@Override	
-    public long getTolerance() {
-		return tolerance;
-	}
 
 	@Override
-	public void setTolerance(long tolerance) {
-		this.tolerance = tolerance;
-		
-		logger.info("Setting tolerance to {}.", tolerance);
-	}
-
-	@Override
-	public long getExpectedTimeUp() {
+	public ExpectedTime getExpectedTimeUp() {
 		return expectedTimeUp;
 	}
 
     @Override
-    public void setExpectedTimeUp(long maxTimeUp) {
+    public void setExpectedTimeUp(ExpectedTime maxTimeUp) {
 		this.expectedTimeUp = maxTimeUp;
 		
 		logger.info("Setting expected time up to {}.", maxTimeUp);
 	}
 
     @Override
-	public long getExpectedTimeDown() {
+	public ExpectedTime getExpectedTimeDown() {
 		return expectedTimeDown;
 	}
 
     @Override
-	public void setExpectedTimeDown(long maxTimeDown) {
+	public void setExpectedTimeDown(ExpectedTime maxTimeDown) {
 		this.expectedTimeDown = maxTimeDown;
 		
 		logger.info("Setting expected time up to {}.", maxTimeDown);

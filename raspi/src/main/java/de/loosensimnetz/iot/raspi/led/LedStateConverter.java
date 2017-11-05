@@ -3,7 +3,6 @@ package de.loosensimnetz.iot.raspi.led;
 import com.pi4j.io.gpio.GpioPinDigitalOutput;
 import com.pi4j.io.gpio.PinState;
 
-import de.loosensimnetz.iot.raspi.motor.Motor;
 import de.loosensimnetz.iot.raspi.motor.Motor.LedState;
 
 /**
