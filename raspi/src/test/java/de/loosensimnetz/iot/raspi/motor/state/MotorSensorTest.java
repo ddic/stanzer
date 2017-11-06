@@ -129,7 +129,7 @@ public class MotorSensorTest {
 		motor.setMovingDown(false);
 		sensor.update(currentTime);
 	
-		assertTrue("State should be Error", sensor.getState() instanceof MotorStateError);
+		assertTrue("State should be MotorStateError", sensor.getState() instanceof MotorStateError);
 	}
 	
 	@Test
@@ -179,7 +179,7 @@ public class MotorSensorTest {
 		motor.setMovingUp(true);
 		sensor.update(currentTime);
 	
-		assertTrue("State should be MotorStateStoppedDown", sensor.getState() instanceof MotorStateMovingUp);
+		assertTrue("State should be MotorStateMovingUp", sensor.getState() instanceof MotorStateMovingUp);
 	}
 	
 	@Test
@@ -259,5 +259,38 @@ public class MotorSensorTest {
 		sensor.update(currentTime);
 	
 		assertTrue("State should be MotorStateError", sensor.getState() instanceof MotorStateError);
+	}
+	
+	@Test
+	public void testTransitionFromMovingUpToStopped() {
+		logger.info("*************** testTransitionFromMovingDownToMovingUpSkippingStopped");
+		
+		MockMotor motor = new MockMotor();		
+		MotorSensor sensor = new MotorSensor(motor, 0L);
+		
+		
+		// Begin moving downward
+		start();
+		motor.setMovingDown(true);			
+		// Update sensor readings after runtime of 1000 ms
+		waitFor(1000L);
+		sensor.update(currentTime);
+		assertTrue("State should be MotorStateMovingDown", sensor.getState() instanceof MotorStateMovingDown);
+		
+		// Update again after runtime of 5000 ms
+		waitFor(5000L);
+		motor.setMovingDown(false);
+		motor.setMovingUp(true);
+		sensor.update(currentTime);
+	
+		assertTrue("State should be MotorStateMovingUp", sensor.getState() instanceof MotorStateMovingUp);
+		
+		// Update again after runtime of 5000 ms
+		waitFor(5000L);
+		motor.setMovingDown(false);
+		motor.setMovingUp(false);
+		sensor.update(currentTime);
+	
+		assertTrue("State should be MotorStateStoppedInitial", sensor.getState() instanceof MotorStateStoppedInitial);
 	}
 }
