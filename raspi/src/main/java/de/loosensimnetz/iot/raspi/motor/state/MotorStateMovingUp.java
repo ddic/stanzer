@@ -21,19 +21,23 @@ public class MotorStateMovingUp extends MotorState {
 	@Override
 	public void update(MotorSensor sensor, long updateTime) {
 		final Motor motor = sensor.getMotor();
-		long timeElapsed = sensor.getUpdateTime() - updateTime;
-		long earliestStateChange = motor.getExpectedTimeUp().getExpectedTime() - motor.getExpectedTimeDown().getTolerance();
-		long latestStateChange = motor.getExpectedTimeUp().getExpectedTime() + motor.getExpectedTimeDown().getTolerance();
+		long timeElapsed = updateTime - sensor.getUpdateTime();
+		long earliestStateChange = motor.getExpectedTimeUp().getExpectedTime() - motor.getExpectedTimeUp().getTolerance();
+		long latestStateChange = motor.getExpectedTimeUp().getExpectedTime() + motor.getExpectedTimeUp().getTolerance();
 		
-		if (!motor.isMovingUp() && timeElapsed < earliestStateChange) {
+		final boolean motorMovingDown = motor.isMovingDown() && !motor.isMovingUp();
+		final boolean motorMovingUp = !motor.isMovingDown() && motor.isMovingUp();
+		final boolean motorStopped = !motorMovingUp && !motorMovingDown;
+		
+		if (motorStopped && timeElapsed < earliestStateChange) {
 			// Motor stopped too early
-			logger.info("Motor stopped to early - stop after {} ms, did not expect stop before {} ms.", timeElapsed, earliestStateChange);
+			logger.info("Motor stopped too early - stop after {} ms, did not expect stop before {} ms.", timeElapsed, earliestStateChange);
 			
 			changeState(sensor, MotorStateError.instance(), updateTime);
 			return;
 		}
 		
-		if (motor.isMovingUp() && timeElapsed > latestStateChange) {
+		if (motorMovingUp && timeElapsed > latestStateChange) {
 			// Motor is taking too long
 			logger.info("Motor is taking too long - still running after {} ms, expect stop after {} ms.", timeElapsed, latestStateChange);
 			
@@ -41,8 +45,15 @@ public class MotorStateMovingUp extends MotorState {
 			return;
 		}
 		
-		if (motor.isMovingUp() && timeElapsed <= latestStateChange) {
+		if (motorMovingUp && timeElapsed <= latestStateChange) {
 			// Motor is still on its way Up - no state change
+			return;
+		}
+		
+		if (motorStopped && timeElapsed <= latestStateChange && timeElapsed >= earliestStateChange) {
+			logger.info("Motor stopped at {} within tolerance (from {} to {}) - changing state to MotorStateStoppedInitial.", timeElapsed, earliestStateChange, latestStateChange);
+			
+			changeState(sensor, MotorStateStoppedInitial.instance(), updateTime);
 			return;
 		}
 		

@@ -263,7 +263,7 @@ public class MotorSensorTest {
 	
 	@Test
 	public void testTransitionFromMovingUpToStopped() {
-		logger.info("*************** testTransitionFromMovingDownToMovingUpSkippingStopped");
+		logger.info("*************** testTransitionFromMovingUpToStopped");
 		
 		MockMotor motor = new MockMotor();		
 		MotorSensor sensor = new MotorSensor(motor, 0L);
