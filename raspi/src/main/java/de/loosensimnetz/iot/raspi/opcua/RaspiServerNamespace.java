@@ -111,16 +111,13 @@ public class RaspiServerNamespace implements Namespace {
 			addMotorNodes(folderNode);
 
 			// Create a "Leds" folder and add it to the "RaspiServer" folder
-			NodeId ledFolderNodeId = new NodeId(namespaceIndex, "RaspiServer/Leds");
+			NodeId ledsFolderNodeId = new NodeId(namespaceIndex, "RaspiServer/Leds");
 
-			UaFolderNode ledFolderNode = new UaFolderNode(server.getNodeMap(), ledFolderNodeId,
+			UaFolderNode ledFolderNode = new UaFolderNode(server.getNodeMap(), ledsFolderNodeId,
 					new QualifiedName(namespaceIndex, "RaspiServer/Leds"), LocalizedText.english("Leds"));
 
 			server.getNodeMap().addNode(ledFolderNode);
-
-			// Make sure our new folder shows up under the server's Objects folder
-			server.getUaNamespace().addReference(Identifiers.ObjectsFolder, Identifiers.Organizes, true,
-					ledFolderNodeId.expanded(), NodeClass.Object);
+			folderNode.addOrganizes(ledFolderNode);
 
 			// Add the led nodes
 			addLedNodes(ledFolderNode, 1);
