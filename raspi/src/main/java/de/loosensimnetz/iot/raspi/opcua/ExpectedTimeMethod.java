@@ -75,6 +75,6 @@ public class ExpectedTimeMethod implements OpcMethod {
 
 		logger.debug("Invoking {}() method of Object '{}'", methodName,
 				context.getObjectNode().getBrowseName().getName());
-		logger.info("Setting expected time value to {}, tolerance to", expectedTime, tolerance);
+		logger.info("Setting expected time value to {}, tolerance to {}.", expectedTime, tolerance);
 	}
 }
