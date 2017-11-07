@@ -59,6 +59,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 
 import de.loosensimnetz.iot.raspi.motor.Motor;
+import de.loosensimnetz.iot.raspi.motor.MotorSensor;
 import de.loosensimnetz.iot.raspi.opcua.ExpectedTimeMethod.TimeType;
 
 public class RaspiServerNamespace implements Namespace {
@@ -79,11 +80,17 @@ public class RaspiServerNamespace implements Namespace {
 	 * The motor model for this OPC UA server
 	 */
 	private final Motor motor;
+	
+	/**
+	 * The motor sensor
+	 */
+	private final MotorSensor motorSensor;
 
-	public RaspiServerNamespace(OpcUaServer server, UShort namespaceIndex, Motor motor) {
+	public RaspiServerNamespace(OpcUaServer server, UShort namespaceIndex, Motor motor, MotorSensor motorSensor) {
 		this.server = server;
 		this.namespaceIndex = namespaceIndex;
 		this.motor = motor;
+		this.motorSensor = motorSensor;
 
 		subscriptionModel = new SubscriptionModel(server, this);
 
@@ -185,12 +192,12 @@ public class RaspiServerNamespace implements Namespace {
 	/**
 	 * Add the variables for the motor folder
 	 * 
-	 * @param dynamicFolder
+	 * @param motorFolder
 	 *            Motor folder ("RaspiServer/Motor")
 	 */
-	private void addMotorVariables(UaFolderNode dynamicFolder) {
+	private void addMotorVariables(UaFolderNode motorFolder) {
 		// Dynamic Boolean MotorDown
-		addDynamicVariable(dynamicFolder, Identifiers.Boolean, "MotorDown",
+		addDynamicVariable(motorFolder, Identifiers.Boolean, "MotorDown",
 				AttributeDelegateChain.create(new AttributeDelegate() {
 					@Override
 					public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
@@ -199,7 +206,7 @@ public class RaspiServerNamespace implements Namespace {
 				}, ValueLoggingDelegate::new));
 
 		// Dynamic Boolean MotorUp
-		addDynamicVariable(dynamicFolder, Identifiers.Boolean, "MotorUp",
+		addDynamicVariable(motorFolder, Identifiers.Boolean, "MotorUp",
 				AttributeDelegateChain.create(new AttributeDelegate() {
 					@Override
 					public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
@@ -208,11 +215,20 @@ public class RaspiServerNamespace implements Namespace {
 				}, ValueLoggingDelegate::new));
 
 		// Dynamic Boolean MotorMoving
-		addDynamicVariable(dynamicFolder, Identifiers.Boolean, "MotorMoving",
+		addDynamicVariable(motorFolder, Identifiers.Boolean, "MotorMoving",
 				AttributeDelegateChain.create(new AttributeDelegate() {
 					@Override
 					public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
 						return new DataValue(new Variant(motor.isMovingUp() || motor.isMovingDown()));
+					}
+				}, ValueLoggingDelegate::new));
+		
+		// Dynamic String MotorState
+		addDynamicVariable(motorFolder, Identifiers.String, "MotorState",
+				AttributeDelegateChain.create(new AttributeDelegate() {
+					@Override
+					public DataValue getValue(AttributeContext context, VariableNode node) throws UaException {
+						return new DataValue(new Variant(motorSensor.getStateId()));
 					}
 				}, ValueLoggingDelegate::new));
 	}

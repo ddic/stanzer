@@ -133,7 +133,7 @@ public class RaspiServer {
         
         server.getNamespaceManager().registerAndAdd(
             RaspiServerNamespace.NAMESPACE_URI,
-            idx -> new RaspiServerNamespace(server, idx, motor));
+            idx -> new RaspiServerNamespace(server, idx, motor, motorSensor));
 
         server.getServer().addRequestHandler(TestStackRequest.class, service -> {
             TestStackRequest request = service.getRequest();
