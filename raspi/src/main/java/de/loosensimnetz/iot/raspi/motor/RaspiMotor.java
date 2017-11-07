@@ -4,6 +4,10 @@ import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.io.gpio.GpioPinDigitalInput;
 import com.pi4j.io.gpio.GpioPinDigitalOutput;
+<<<<<<< HEAD
+import com.pi4j.io.gpio.PinMode;
+=======
+>>>>>>> branch 'master' of https://github.com/ddic/stanzer
 import com.pi4j.io.gpio.PinPullResistance;
 import com.pi4j.io.gpio.PinState;
 import com.pi4j.io.gpio.RaspiPin;
@@ -40,19 +44,20 @@ public class RaspiMotor implements Motor {
 		this.expectedTimeStoppedDown = expectedTimeStoppedDown;
 	}
 
-
-
 	public RaspiMotor(ExpectedTime maxTimeUp, ExpectedTime maxTimeDown) {
     	gpio = GpioFactory.getInstance();
     	
     	ledPin1 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_02, PinState.HIGH);
         ledPin2 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_00, PinState.LOW);
-        
-        sensorPin1 = gpio.provisionDigitalInputPin(RaspiPin.GPIO_07, PinPullResistance.PULL_DOWN);
-        sensorPin2 = gpio.provisionDigitalInputPin(RaspiPin.GPIO_08, PinPullResistance.PULL_DOWN);
+
+        sensorPin1 = gpio.provisionDigitalInputPin(RaspiPin.GPIO_08, PinPullResistance.PULL_DOWN);
+        sensorPin2 = gpio.provisionDigitalInputPin(RaspiPin.GPIO_09, PinPullResistance.PULL_DOWN);
         
         ledPin1.setShutdownOptions(true, PinState.LOW);
         ledPin2.setShutdownOptions(true, PinState.LOW);
+        
+        sensorPin1.setShutdownOptions(true, PinState.LOW);
+        sensorPin2.setShutdownOptions(true, PinState.LOW);
         
         this.expectedTimeDown = maxTimeDown;
         this.expectedTimeUp = maxTimeUp;
