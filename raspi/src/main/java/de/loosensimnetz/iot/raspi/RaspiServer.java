@@ -33,6 +33,8 @@ import com.google.common.collect.ImmutableList;
 import de.loosensimnetz.iot.RaspiConstants;
 import de.loosensimnetz.iot.raspi.motor.Motor;
 import de.loosensimnetz.iot.raspi.motor.MotorFactory;
+import de.loosensimnetz.iot.raspi.motor.MotorSensor;
+import de.loosensimnetz.iot.raspi.motor.MotorSensorMonitor;
 import de.loosensimnetz.iot.raspi.opcua.KeyStoreLoader;
 import de.loosensimnetz.iot.raspi.opcua.RaspiServerNamespace;
 
@@ -60,6 +62,9 @@ public class RaspiServer {
 
     private final OpcUaServer server;
     private final Logger logger = LoggerFactory.getLogger(getClass());
+	private final Motor motor;
+	private final MotorSensor motorSensor;
+	private final MotorSensorMonitor motorSensorMonitor;
 
     public RaspiServer() throws Exception {
         CryptoRestrictions.remove();
@@ -122,11 +127,13 @@ public class RaspiServer {
             .build();
 
         server = new OpcUaServer(serverConfig);
-        Motor motorSensor = createMotor();
+        motor = createMotor();
+        motorSensor = new MotorSensor(motor, System.currentTimeMillis());
+        motorSensorMonitor = new MotorSensorMonitor(250L, motorSensor);
         
         server.getNamespaceManager().registerAndAdd(
             RaspiServerNamespace.NAMESPACE_URI,
-            idx -> new RaspiServerNamespace(server, idx, motorSensor));
+            idx -> new RaspiServerNamespace(server, idx, motor));
 
         server.getServer().addRequestHandler(TestStackRequest.class, service -> {
             TestStackRequest request = service.getRequest();
@@ -174,11 +181,13 @@ public class RaspiServer {
     }
 
     public CompletableFuture<OpcUaServer> startup() {
+    	motorSensorMonitor.start();
         return server.startup();
     }
 
     public CompletableFuture<OpcUaServer> shutdown() {
-        return server.shutdown();
+    	motorSensorMonitor.interrupt();
+    	return server.shutdown();
     }
     
     
