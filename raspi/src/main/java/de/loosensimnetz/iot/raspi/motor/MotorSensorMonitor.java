@@ -44,7 +44,7 @@ public class MotorSensorMonitor extends Thread {
 		logger.info("MotorSensorMonitor started");
 
 		while (goOn && !this.isInterrupted()) {
-			logger.info("Delaying for {} milliseconds");
+			logger.info("Delaying for {} milliseconds", updateInterval);
 
 			try {
 				String oldState = sensor.getStateId();
