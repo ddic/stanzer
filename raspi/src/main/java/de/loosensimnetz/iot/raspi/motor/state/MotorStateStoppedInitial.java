@@ -22,13 +22,16 @@ public class MotorStateStoppedInitial extends MotorState {
 	@Override
 	public void update(MotorSensor sensor, long updateTime) {		
 		final Motor motor = sensor.getMotor();
+		final boolean motorMovingDown = motor.isMovingDown() && !motor.isMovingUp();
+		final boolean motorMovingUp = !motor.isMovingDown() && motor.isMovingUp();
+		final boolean motorStopped = !motorMovingUp && !motorMovingDown;
 		
-		if (! motor.isMovingDown() && ! motor.isMovingUp()) {
+		if (motorStopped) {
 			// Motor is still not moving - no state change
 			return;
 		}
 		
-		if (motor.isMovingDown()) {
+		if (motorMovingDown) {
 			// From the initial state the motor can only move down - MovingDown state
 			logger.info("Motor is starting to move down at {} ms - changing state to MovingDown", updateTime);
 			

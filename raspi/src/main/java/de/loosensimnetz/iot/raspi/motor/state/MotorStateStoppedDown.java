@@ -3,6 +3,7 @@ package de.loosensimnetz.iot.raspi.motor.state;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.loosensimnetz.iot.raspi.motor.Motor;
 import de.loosensimnetz.iot.raspi.motor.MotorSensor;
 
 public class MotorStateStoppedDown extends MotorState {
@@ -19,13 +20,18 @@ public class MotorStateStoppedDown extends MotorState {
 	}
 
 	@Override
-	public void update(MotorSensor sensor, long updateTime) {		
-		if (! sensor.getMotor().isMovingDown() && ! sensor.getMotor().isMovingUp()) {
+	public void update(MotorSensor sensor, long updateTime) {
+		final Motor motor = sensor.getMotor();
+		final boolean motorMovingDown = motor.isMovingDown() && !motor.isMovingUp();
+		final boolean motorMovingUp = !motor.isMovingDown() && motor.isMovingUp();
+		final boolean motorStopped = !motorMovingUp && !motorMovingDown;
+		
+		if (motorStopped) {
 			// Motor is still not moving - no state change
 			return;
 		}
 		
-		if (sensor.getMotor().isMovingUp()) {
+		if (motorMovingUp) {
 			// From the down state the motor can only move up - MovingUp state
 			logger.info("Motor ist starting to move up at {} ms - changing state to MovingUp", updateTime);
 			

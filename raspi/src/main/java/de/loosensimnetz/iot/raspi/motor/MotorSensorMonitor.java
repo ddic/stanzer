@@ -44,15 +44,17 @@ public class MotorSensorMonitor extends Thread {
 		logger.info("MotorSensorMonitor started");
 
 		while (goOn && !this.isInterrupted()) {
-			logger.info("Delaying for {} milliseconds", updateInterval);
+			logger.debug("Delaying for {} milliseconds", updateInterval);
 
 			try {
 				String oldState = sensor.getStateId();
 				Thread.sleep(updateInterval);
 				sensor.update(System.currentTimeMillis());
 				String newState = sensor.getStateId();
-								
-				logger.info("Updating state. Old state: {}, new state: {}", oldState, newState);
+				
+				if (!oldState.equals(newState)) {
+					logger.info("Updating state. Old state: {}, new state: {}", oldState, newState);
+				}
 			} catch (InterruptedException e) {
 				logger.error("MotorSensorMonitor interrupted - exiting", e);
 				goOn = false;

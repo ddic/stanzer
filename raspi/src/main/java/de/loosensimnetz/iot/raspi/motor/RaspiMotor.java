@@ -4,10 +4,6 @@ import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.io.gpio.GpioPinDigitalInput;
 import com.pi4j.io.gpio.GpioPinDigitalOutput;
-<<<<<<< HEAD
-import com.pi4j.io.gpio.PinMode;
-=======
->>>>>>> branch 'master' of https://github.com/ddic/stanzer
 import com.pi4j.io.gpio.PinPullResistance;
 import com.pi4j.io.gpio.PinState;
 import com.pi4j.io.gpio.RaspiPin;
@@ -47,11 +43,15 @@ public class RaspiMotor implements Motor {
 	public RaspiMotor(ExpectedTime maxTimeUp, ExpectedTime maxTimeDown) {
     	gpio = GpioFactory.getInstance();
     	
-    	ledPin1 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_02, PinState.HIGH);
-        ledPin2 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_00, PinState.LOW);
+    	logger.info("Connection led 1 to GPIO pin 02 (WiringPI)");
+    	ledPin1 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_00, PinState.HIGH);
+    	logger.info("Connection led 2 to GPIO pin 00 (WiringPI)");
+    	ledPin2 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_02, PinState.LOW);
 
-        sensorPin1 = gpio.provisionDigitalInputPin(RaspiPin.GPIO_08, PinPullResistance.PULL_DOWN);
-        sensorPin2 = gpio.provisionDigitalInputPin(RaspiPin.GPIO_09, PinPullResistance.PULL_DOWN);
+    	logger.info("Connection sensor 1 to GPIO pin 08 (WiringPI)");
+        sensorPin1 = gpio.provisionDigitalInputPin(RaspiPin.GPIO_04);
+        logger.info("Connection sensor 2 to GPIO pin 09 (WiringPI)");
+        sensorPin2 = gpio.provisionDigitalInputPin(RaspiPin.GPIO_05);
         
         ledPin1.setShutdownOptions(true, PinState.LOW);
         ledPin2.setShutdownOptions(true, PinState.LOW);
@@ -89,11 +89,13 @@ public class RaspiMotor implements Motor {
 
 	@Override
 	public boolean isMovingDown() {
+		logger.debug("Reading state of pin 1: {}", sensorPin1.getState());
 		return sensorPin1.getState() == PinState.HIGH;
 	}
 
 	@Override
 	public boolean isMovingUp() {
+		logger.debug("Reading state of pin 2: {}", sensorPin2.getState());
 		return sensorPin2.getState() == PinState.HIGH;
 	}
 
