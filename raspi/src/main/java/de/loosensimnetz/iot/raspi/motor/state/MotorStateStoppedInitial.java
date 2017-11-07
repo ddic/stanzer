@@ -41,4 +41,9 @@ public class MotorStateStoppedInitial extends MotorState {
 		
 		changeState(sensor, MotorStateError.instance(), updateTime);
 	}
+	
+	@Override
+	public StateId getStateId() {
+		return StateId.STOPPED_INITIAL;
+	}
 }

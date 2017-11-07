@@ -43,4 +43,8 @@ public class MotorStateError extends MotorState {
 		return;
 	}
 
+	@Override
+	public StateId getStateId() {
+		return StateId.ERROR;
+	}
 }

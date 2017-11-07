@@ -63,4 +63,8 @@ public class MotorStateMovingUp extends MotorState {
 		changeState(sensor, MotorStateError.instance(), updateTime);
 	}
 
+	@Override
+	public StateId getStateId() {
+		return StateId.MOVING_UP;
+	}
 }

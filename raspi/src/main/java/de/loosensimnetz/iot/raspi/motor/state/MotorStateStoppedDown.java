@@ -38,4 +38,9 @@ public class MotorStateStoppedDown extends MotorState {
 		
 		changeState(sensor, MotorStateError.instance(), updateTime);
 	}
+	
+	@Override
+	public StateId getStateId() {
+		return StateId.STOPPED_DOWN;
+	}
 }
