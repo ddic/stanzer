@@ -2,6 +2,7 @@ package de.loosensimnetz.iot.raspi.motor;
 
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
+import com.pi4j.io.gpio.GpioPinDigitalInput;
 import com.pi4j.io.gpio.GpioPinDigitalOutput;
 import com.pi4j.io.gpio.PinState;
 import com.pi4j.io.gpio.RaspiPin;
@@ -17,12 +18,15 @@ public class RaspiMotor implements Motor {
 	private final GpioController gpio;
 	private final GpioPinDigitalOutput ledPin1;
 	private final GpioPinDigitalOutput ledPin2;
+	private final GpioPinDigitalInput sensorPin1;
+	private final GpioPinDigitalInput sensorPin2;
+	
 	private ExpectedTime expectedTimeUp, expectedTimeDown, expectedTimeStoppedDown;
 	
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public RaspiMotor() {
-		this(new ExpectedTime(8000L, 1000L), new ExpectedTime(8000L, 1000L));
+		this(new ExpectedTime(7000L, 1000L), new ExpectedTime(7000L, 1000L));
 	}
 	
 	@Override
@@ -42,6 +46,9 @@ public class RaspiMotor implements Motor {
     	
     	ledPin1 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_02, PinState.HIGH);
         ledPin2 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_00, PinState.LOW);
+        
+        sensorPin1 = gpio.provisionDigitalInputPin(RaspiPin.GPIO_08);
+        sensorPin2 = gpio.provisionDigitalInputPin(RaspiPin.GPIO_09);
         
         ledPin1.setShutdownOptions(true, PinState.LOW);
         ledPin2.setShutdownOptions(true, PinState.LOW);
@@ -76,14 +83,12 @@ public class RaspiMotor implements Motor {
 
 	@Override
 	public boolean isMovingDown() {
-		// TODO Auto-generated method stub
-		return false;
+		return sensorPin1.getState() == PinState.HIGH;
 	}
 
 	@Override
 	public boolean isMovingUp() {
-		// TODO Auto-generated method stub
-		return false;
+		return sensorPin2.getState() == PinState.HIGH;
 	}
 
 	@Override
