@@ -187,6 +187,13 @@ public class RaspiServerNamespace implements Namespace {
 																				// "setExpectedTimeUp"
 		addMethod(methodName, methodId, folderNode, new ExpectedTimeMethod(motor, TimeType.TIME_UP),
 				"Set the expected time and tolerance in milliseconds for the motor to move from the lower end position upward to the initial position. Returns the values before the invocation.");
+		
+		// Method reset
+		methodName = "reset()";
+		methodId = folderNode.getNodeId().getIdentifier() + "/" + methodName; // "RaspiServer/Motor" + "/" +
+																				// "reset"
+		addMethod(methodName, methodId, folderNode, new MotorResetStateMethod(motorSensor),
+				"Manually reset the state of the motor to STOPPED_INITIAL.");
 	}
 
 	/**
