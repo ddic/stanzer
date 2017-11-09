@@ -71,31 +71,31 @@ public interface Motor {
 	public static enum LedState { ON, OFF };
 	
 	/**
-	 * Get {@link Motor#LedState} of LED #1
+	 * Get {@link Motor#LedState} of LED #12
 	 * 
-	 * @return the LedState of LED #1
+	 * @return the LedState of LED #12
 	 */
-	public LedState getLed1State();
+	public LedState getLed12State();
 	
 	/**
-	 * Get {@link Motor#LedState} of LED #2
+	 * Get {@link Motor#LedState} of LED #13
 	 * 
-	 * @return the LedState of LED #2
+	 * @return the LedState of LED #13
 	 */
-	public LedState getLed2State();
+	public LedState getLed13State();
 	
 	/**
-	 * Set the LedState of LED #1
+	 * Set the LedState of LED #12
 	 * 
-	 * @param state the state of LED #1 after this method returns
+	 * @param state the state of LED #12 after this method returns
 	 */
-	public void setLed1State(LedState state);
+	public void setLed12State(LedState state);
 	
 	/**
-	 * Set the LedState of LED #2
+	 * Set the LedState of LED #13
 	 * 
-	 * @param state the state of LED #2 after this method returns
+	 * @param state the state of LED #13 after this method returns
 	 */
-	public void setLed2State(LedState state);
+	public void setLed13State(LedState state);
 	
 }

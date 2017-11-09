@@ -57,24 +57,24 @@ public class MockMotor implements Motor {
 	}
 
 	@Override
-	public LedState getLed1State() {
+	public LedState getLed12State() {
 		return this.led1State;
 	}
 
 	@Override
-	public LedState getLed2State() {
+	public LedState getLed13State() {
 		return this.led2State;
 	}
 
 	@Override
-	public void setLed1State(LedState state) {
+	public void setLed12State(LedState state) {
 		this.led1State = state;
 		
 		logger.info("Setting state of led #1 to {}.", state.toString());
 	}
 
 	@Override
-	public void setLed2State(LedState state) {
+	public void setLed13State(LedState state) {
 		this.led2State = state;
 		
 		logger.info("Setting state of led #2 to {}.", state.toString());

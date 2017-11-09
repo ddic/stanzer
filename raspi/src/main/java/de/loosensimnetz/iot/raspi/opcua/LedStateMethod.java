@@ -39,13 +39,13 @@ public class LedStateMethod implements OpcMethod {
         logger.info("Setting state of led number {} to {}", ledNumber, Boolean.valueOf(x));
 
         if (ledNumber == 1) {
-        	xBefore.set(motor.getLed1State() == LedState.ON ? Boolean.TRUE : Boolean.FALSE);
-        	motor.setLed1State(x ? LedState.ON: LedState.OFF);
+        	xBefore.set(motor.getLed12State() == LedState.ON ? Boolean.TRUE : Boolean.FALSE);
+        	motor.setLed12State(x ? LedState.ON: LedState.OFF);
         }
         
         if (ledNumber == 2) {
-        	xBefore.set(motor.getLed2State() == LedState.ON ? Boolean.TRUE : Boolean.FALSE);
-        	motor.setLed2State(x ? LedState.ON: LedState.OFF);
+        	xBefore.set(motor.getLed13State() == LedState.ON ? Boolean.TRUE : Boolean.FALSE);
+        	motor.setLed13State(x ? LedState.ON: LedState.OFF);
         }
     }
 }

@@ -21,11 +21,11 @@ public class LedStateBoolean {
         logger.debug("Returning the value of ledState{}.", ledNumber);
         
         if (ledNumber == 1) {
-        	return motor.getLed1State() == LedState.ON;
+        	return motor.getLed12State() == LedState.ON;
         }
         
         if (ledNumber == 2) {
-        	return motor.getLed2State() == LedState.ON;
+        	return motor.getLed13State() == LedState.ON;
         }
         
         return false;
