@@ -24,7 +24,7 @@ public class RaspiMotor implements Motor {
 	
 	private ExpectedTime expectedTimeUp, expectedTimeDown, expectedTimeStoppedDown;
 	
-	private final Logger logger = LoggerFactory.getLogger(getClass());
+	private static final Logger logger = LoggerFactory.getLogger(RaspiMotor.class);
 
 	public RaspiMotor() {
 		this(new ExpectedTime(7000L, 1000L), new ExpectedTime(7000L, 1000L));
