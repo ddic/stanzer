@@ -11,8 +11,20 @@ import org.slf4j.LoggerFactory;
 import de.loosensimnetz.iot.raspi.motor.Motor;
 import de.loosensimnetz.iot.raspi.motor.Motor.LedState;
 
+/**
+ * Wrapper class for OPC UA method setLedXXState
+ * 
+ * @author jloosen
+ *
+ */
 public class LedStateMethod implements OpcMethod {
+	/**
+	 * The motor
+	 */
 	private final Motor motor;
+	/**
+	 * One instance of this class for each led
+	 */
 	private final int ledNumber;
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -21,6 +33,13 @@ public class LedStateMethod implements OpcMethod {
 		this.ledNumber = ledNumber;
 	}
 	
+	/**
+	 * The OPC UA method
+	 * 
+	 * @param context	The OPC UA context
+	 * @param x New state of the led (<code>true</code> = ON, <code>false</code> = OFF)
+	 * @param xBefore New state of the led (<code>true</code> = ON, <code>false</code> = OFF)
+	 */
     @UaMethod
     public void invoke(
         InvocationContext context,

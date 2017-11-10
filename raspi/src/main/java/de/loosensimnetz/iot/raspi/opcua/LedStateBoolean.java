@@ -6,8 +6,20 @@ import org.slf4j.LoggerFactory;
 import de.loosensimnetz.iot.raspi.motor.Motor;
 import de.loosensimnetz.iot.raspi.motor.Motor.LedState;
 
+/**
+ * Wrapper class for OPC UA variable led state (type: boolean).
+ * 
+ * @author jloosen
+ *
+ */
 public class LedStateBoolean {
+	/**
+	 * The motor
+	 */
 	private final Motor motor;
+	/**
+	 * One instance of this class for each lead (led #12 and #13)
+	 */
 	private final int ledNumber;
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -16,7 +28,10 @@ public class LedStateBoolean {
 		this.ledNumber = ledNumber;
 	}
 	    
-    public boolean getState() {
+    /**
+     * @return Return the state (<code>true</code> = ON, <code>false</code> = OFF).
+     */
+	public boolean getState() {
 
         logger.debug("Returning the value of ledState{}.", ledNumber);
         

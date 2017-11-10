@@ -11,20 +11,42 @@ import org.slf4j.LoggerFactory;
 import de.loosensimnetz.iot.raspi.motor.ExpectedTime;
 import de.loosensimnetz.iot.raspi.motor.Motor;
 
+/**
+ * Wrapper class for OPC UA methods setExpectedTimeUp, setExpectedTimeDown and setExpectedTimeStoppedDown
+ * 
+ * @author jloosen
+ *
+ */
 public class ExpectedTimeMethod implements OpcMethod {
 	public enum TimeType {
 		TIME_DOWN, TIME_UP, TIME_STOPPED_DOWN
 	};
 
+	/**
+	 * The motor
+	 */
 	private final Motor motor;
+	/**
+	 * One instance of this wrapper class for each TimeType
+	 */
 	private final TimeType timeType;
-	private final Logger logger = LoggerFactory.getLogger(getClass());
+	
+	private static final Logger logger = LoggerFactory.getLogger(ExpectedTimeMethod.class);
 
 	public ExpectedTimeMethod(Motor motor, TimeType timeType) {
 		this.motor = motor;
 		this.timeType = timeType;
 	}
 
+	/**
+	 * The OPC UA method
+	 * 
+	 * @param context	The OPC UA context
+	 * @param expectedTime	New value in milliseconds for expected time
+	 * @param tolerance New value in milliseconds for tolerance
+	 * @param expectedTimeBefore Old value in milliseconds for expected time
+	 * @param toleranceBefore Old value in milliseconds for tolerance
+	 */
 	@UaMethod
 	public void invoke(InvocationContext context,
 
