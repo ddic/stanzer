@@ -37,6 +37,14 @@ public class MotorStateMovingDown extends MotorState {
 			changeState(sensor, MotorStateError.instance(), updateTime);
 			return;
 		}
+		
+		if (motorMovingUp && timeElapsed < earliestStateChange) {
+			// Motor moving up too early
+			logger.info("Motor moving up too early - change of direction after {} ms, did not expect change before {} ms.", timeElapsed, earliestStateChange);
+			
+			changeState(sensor, MotorStateError.instance(), updateTime);
+			return;
+		}
 
 		if (motorStopped && timeElapsed <= latestStateChange) {
 			// Motor stopped within tolerance
