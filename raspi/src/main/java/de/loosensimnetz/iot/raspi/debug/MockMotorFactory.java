@@ -3,6 +3,7 @@ package de.loosensimnetz.iot.raspi.debug;
 import de.loosensimnetz.iot.raspi.motor.ExpectedTime;
 import de.loosensimnetz.iot.raspi.motor.Motor;
 import de.loosensimnetz.iot.raspi.motor.MotorFactory;
+import de.loosensimnetz.iot.raspi.motor.RaspiMotor;
 
 public class MockMotorFactory implements MotorFactory {
 
