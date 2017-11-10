@@ -49,14 +49,13 @@ public class MotorSensorMonitor extends Thread {
 	/**
 	 * MotorSensor thread loop.
 	 * 
-	 * 1.) Initialize the motor, so the two leds are off.
-	 * 2.) Call update() method on the {@link MotorSensor} object in regular intervals
-	 * 3.) If an error state is entered, start the BlinkingLed thread and let the leds blink three times
-	 * 4.) If an error state is left, interrupt (stop) the BlinkingLed thread.
-	 * 5.) 5.) If the motor is moving, turn on the respective led:
-					moving up   -> led12 OFF	led13 ON				
-					moving down -> led12 ON	    led13 OFF	
-	 * 6.) If the motor is stopped, turn off the leds
+	 * 1.) Initialize the motor, so the two leds are off. 2.) Call update() method
+	 * on the {@link MotorSensor} object in regular intervals 3.) If an error state
+	 * is entered, start the BlinkingLed thread and let the leds blink three times
+	 * 4.) If an error state is left, interrupt (stop) the BlinkingLed thread. 5.)
+	 * 5.) If the motor is moving, turn on the respective led: moving up -> led12
+	 * OFF led13 ON moving down -> led12 ON led13 OFF 6.) If the motor is stopped,
+	 * turn off the leds
 	 * 
 	 * approx. every uptadeInterval milliseconds
 	 */
@@ -65,80 +64,88 @@ public class MotorSensorMonitor extends Thread {
 		boolean goOn = true;
 
 		logger.info("MotorSensorMonitor started");
-		
+
 		// Initialize leds
 		motorSensor.getMotor().setLed12State(LedState.OFF);
 		motorSensor.getMotor().setLed13State(LedState.OFF);
 
 		while (goOn && !this.isInterrupted()) {
 			logger.debug("Delaying for {} milliseconds", updateInterval);
-
+			
+			// Remember the old state
+			String oldState = motorSensor.getStateId();
+			
+			// Sleep for a while
 			try {
-				String oldState = motorSensor.getStateId();
+
 				Thread.sleep(updateInterval);
-				motorSensor.update(System.currentTimeMillis());
-				String newState = motorSensor.getStateId();
-
-				if (!oldState.equals(newState)) {
-					logger.info("Updating state. Old state: {}, new state: {}", oldState, newState);
-
-					//  3.) If an error state is entered, start the BlinkingLed thread and let the leds blink three times
-					if (motorSensor.getState() == MotorStateError.instance() && blinkingLed == null) {
-						logger.info("Error state - starting to blink.");
-
-						blinkingLed = new BlinkingLed(3, 500L, BlinkType.ALTERNATING, motorSensor);
-						blinkingLed.start();
-					}
-					
-					// 4.) If an error state is left, interrupt (stop) the BlinkingLed thread.
-					if (motorSensor.getState() != MotorStateError.instance() && blinkingLed != null) {
-						logger.info("Error state left - stopping to blink.");
-
-						blinkingLed.interrupt();
-						blinkingLed = null;
-					}
-					
-					// 5.) If the motor is moving, turn on the respective led:
-					// 			moving up   -> led12 OFF	led13 ON				
-					// 			moving down -> led12 ON	    led13 OFF					
-					if (motorSensor.getState() != MotorStateMovingUp.instance()) {
-						logger.info("Entered MotorStateMovingDown. Turning on led 1.");
-
-						motorSensor.getMotor().setLed12State(LedState.ON);
-						motorSensor.getMotor().setLed13State(LedState.OFF);
-					}
-					
-					if (motorSensor.getState() != MotorStateMovingDown.instance()) {
-						logger.info("Entered MotorStateMovingDown. Turning on led 2.");
-
-						motorSensor.getMotor().setLed12State(LedState.OFF);
-						motorSensor.getMotor().setLed13State(LedState.ON);
-					}
-					
-					// 6.) If the motor is stopped, turn off the leds
-					if (motorSensor.getState() == MotorStateStoppedDown.instance() ||
-						motorSensor.getState() == MotorStateStoppedInitial.instance()) {
-						
-						logger.info("Entered MotorStateStoppedDown or MotorStateStoppedInitial. Turning off leds.");
-
-						motorSensor.getMotor().setLed12State(LedState.OFF);
-						motorSensor.getMotor().setLed13State(LedState.OFF);
-					}
-				}
-
 			} catch (InterruptedException e) {
 				logger.error("MotorSensorMonitor interrupted - exiting", e);
 				goOn = false;
-				
+
 				// If we are blinking - interrupt (stop) the thread
 				if (blinkingLed != null) {
 					blinkingLed.interrupt();
 					blinkingLed = null;
 				}
-				
+
 				this.interrupt();
+			}
+			
+			// Now update state...
+			motorSensor.update(System.currentTimeMillis());
+			
+			//...and get the new state
+			String newState = motorSensor.getStateId();
+
+			// Log message if state has changed
+			if (!oldState.equals(newState)) {
+				logger.info("Updating state. Old state: {}, new state: {}", oldState, newState);
+			}
+
+			// 3.) If an error state is entered, start the BlinkingLed thread and let the
+			// leds blink three times
+			if (motorSensor.getState() == MotorStateError.instance() && blinkingLed == null) {
+				logger.info("Error state - starting to blink.");
+
+				blinkingLed = new BlinkingLed(3, 500L, BlinkType.ALTERNATING, motorSensor);
+				blinkingLed.start();
+			}
+
+			// 4.) If an error state is left, interrupt (stop) the BlinkingLed thread.
+			if (motorSensor.getState() != MotorStateError.instance() && blinkingLed != null) {
+				logger.info("Error state left - stopping to blink.");
+
+				blinkingLed.interrupt();
+				blinkingLed = null;
+			}
+
+			// 5.) If the motor is moving, turn on the respective led:
+			// moving up -> led12 OFF led13 ON
+			// moving down -> led12 ON led13 OFF
+			if (motorSensor.getState() == MotorStateMovingUp.instance()) {
+				logger.debug("In MotorStateMovingDown. Turning on led 1.");
+
+				motorSensor.getMotor().setLed12State(LedState.ON);
+				motorSensor.getMotor().setLed13State(LedState.OFF);
+			}
+
+			if (motorSensor.getState() != MotorStateMovingDown.instance()) {
+				logger.debug("In MotorStateMovingDown. Turning on led 2.");
+
+				motorSensor.getMotor().setLed12State(LedState.OFF);
+				motorSensor.getMotor().setLed13State(LedState.ON);
+			}
+
+			// 6.) If the motor is stopped, turn off the leds
+			if (motorSensor.getState() == MotorStateStoppedDown.instance()
+					|| motorSensor.getState() == MotorStateStoppedInitial.instance()) {
+
+				logger.debug("In MotorStateStoppedDown or MotorStateStoppedInitial. Turning off leds.");
+
+				motorSensor.getMotor().setLed12State(LedState.OFF);
+				motorSensor.getMotor().setLed13State(LedState.OFF);
 			}
 		}
 	}
-
 }
