@@ -116,8 +116,8 @@ public class MotorSensorMonitor extends Thread {
 					}
 					
 					// 6.) If the motor is stopped, turn off the leds
-					if (motorSensor.getState() != MotorStateStoppedDown.instance() ||
-						motorSensor.getState() != MotorStateStoppedInitial.instance()) {
+					if (motorSensor.getState() == MotorStateStoppedDown.instance() ||
+						motorSensor.getState() == MotorStateStoppedInitial.instance()) {
 						
 						logger.info("Entered MotorStateStoppedDown or MotorStateStoppedInitial. Turning off leds.");
 

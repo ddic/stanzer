@@ -49,12 +49,11 @@ public class RaspiServer {
 	public static final String TEXT_APPLICATION_URI = "urn:loosensimnetz.de:iot:raspi:server";
 	public static final String TEXT_RASPI_SERVER = "IoT-RaspiServer";
 
-	private static void usage(String programName) {
+	private static void usage() {
 		System.out.format("sudo java -jar  \\\n" + 
 				"	 	-Dde.loosensimnetz.iot.raspi.MotorFactory=[de.loosensimnetz.iot.raspi.motor.DefaultMotorFactory]  \\\n" + 
 				"	 	-Dde.loosensimnetz.iot.raspi.ExpectedTimeDown=[5000]  \\\n" + 
-				"	 	-Dde.loosensimnetz.iot.raspi.ExpectedTimeUp=[5000]  \\\n" + 
-				"	    {}\n", programName);
+				"	 	-Dde.loosensimnetz.iot.raspi.ExpectedTimeUp=[5000]  \\\n");
 	}
 	
 	/**
@@ -73,7 +72,7 @@ public class RaspiServer {
 	 */
 	public static void main(String[] args) throws Exception {
 		RaspiServer server = new RaspiServer();
-		usage(args[0]);
+		usage();
 
         server.startup().get();
 
