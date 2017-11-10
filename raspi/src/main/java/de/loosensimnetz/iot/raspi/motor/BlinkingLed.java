@@ -70,7 +70,7 @@ public class BlinkingLed extends Thread {
 	 */
 	@Override
 	public void run() {
-		logger.info("Starting to blink {} times. Mode: {}, delay: {}");
+		logger.info("Starting to blink {} times. Mode: {}, delay: {}", numBlink, blinkType, delay);
 		int round = 1;
 		boolean goOn = true;
 
@@ -88,11 +88,13 @@ public class BlinkingLed extends Thread {
 				if (round++ >= numBlink)
 					goOn = false;
 			}
-			
+
 			try {
 				Thread.sleep(delay);
 			} catch (InterruptedException e) {
 				// interrupted while sleeping
+				logger.info("Thread was interrupted. Exiting.");
+
 				goOn = false;
 				interrupt();
 			}
@@ -103,10 +105,6 @@ public class BlinkingLed extends Thread {
 			motorSensor.getMotor().setLed12State(ledState12);
 			motorSensor.getMotor().setLed13State(ledState13);
 		}
-		
-		// Befor exiting thread turn off leds
-		motorSensor.getMotor().setLed12State(LedState.OFF);
-		motorSensor.getMotor().setLed13State(LedState.OFF);
 	}
 
 	/**

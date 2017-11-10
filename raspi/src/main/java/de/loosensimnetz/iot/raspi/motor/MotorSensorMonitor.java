@@ -108,7 +108,7 @@ public class MotorSensorMonitor extends Thread {
 			if (motorSensor.getState() == MotorStateError.instance() && blinkingLed == null) {
 				logger.info("Error state - starting to blink.");
 
-				blinkingLed = new BlinkingLed(3, 500L, BlinkType.ALTERNATING, motorSensor);
+				blinkingLed = new BlinkingLed(6, 500L, BlinkType.ALTERNATING, motorSensor);
 				blinkingLed.start();
 			}
 
