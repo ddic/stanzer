@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableList;
 
 import de.loosensimnetz.iot.RaspiConstants;
+import de.loosensimnetz.iot.raspi.motor.ExpectedTime;
 import de.loosensimnetz.iot.raspi.motor.Motor;
 import de.loosensimnetz.iot.raspi.motor.MotorFactory;
 import de.loosensimnetz.iot.raspi.motor.MotorSensor;
@@ -39,7 +40,7 @@ import de.loosensimnetz.iot.raspi.opcua.KeyStoreLoader;
 import de.loosensimnetz.iot.raspi.opcua.RaspiServerNamespace;
 
 /**
- * Hello world!
+ * Raspberry server wirh OPC UA capabilities
  *
  */
 public class RaspiServer {
@@ -48,6 +49,20 @@ public class RaspiServer {
 	public static final String TEXT_APPLICATION_URI = "urn:loosensimnetz.de:iot:raspi:server";
 	public static final String TEXT_RASPI_SERVER = "IoT-RaspiServer";
 
+	/**
+	 * Main entry for the application.
+	 * 
+	 * Start of server:
+	 * 
+	 * sudo java -jar  \
+	 * 			 -Dde.loosensimnetz.iot.raspi.MotorFactory=[de.loosensimnetz.iot.raspi.motor.DefaultMotorFactory]  \
+	 * 		     -Dde.loosensimnetz.iot.raspi.ExpectedTimeDown=[5000]  \
+	 *           -Dde.loosensimnetz.iot.raspi.ExpectedTimeUp=[5000]  \
+	 *           <arg[0]>
+	 *           
+	 * @param args	Command line arguments (not evaluated)
+	 * @throws Exception
+	 */
 	public static void main(String[] args) throws Exception {
 		RaspiServer server = new RaspiServer();
 
@@ -60,13 +75,29 @@ public class RaspiServer {
         future.get();
     }
 
-    private final OpcUaServer server;
+    /**
+     * Eclipse milo OPC UA server
+     */
+	private final OpcUaServer server;
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    /**
+     * The motor - can be MockMotor or RaspiMotor
+     */
 	private final Motor motor;
+	/**
+	 * The motor sensor
+	 */
 	private final MotorSensor motorSensor;
+	/**
+	 * The motor sensor monitor (daemon thread)
+	 */
 	private final MotorSensorMonitor motorSensorMonitor;
 
-    public RaspiServer() throws Exception {
+    /**
+     * COnstructor
+     * @throws Exception
+     */
+	public RaspiServer() throws Exception {
         CryptoRestrictions.remove();
 
         KeyStoreLoader loader = new KeyStoreLoader().load();
@@ -151,17 +182,55 @@ public class RaspiServer {
             service.setResponse(new TestStackExResponse(header, request.getInput()));
         });
     }
+    
+    /**
+     * Parse java environment parameter as long value
+     * 
+     * @param parameterName Name of the parameter
+     * @param def Default value - used if no parameter is supplied or supplied parameter has an invalid value
+     * @return
+     */
+	private long getLongParameter(String parameterName, long def) {
+    	long result;
+    	String value = System.getProperty(parameterName);
+    	
+    	if (value == null) {
+    		logger.info("No value found for parameter {} - using default {}.", parameterName, def);
+    		result = def;
+    	}
+    	else {
+    		try {
+    			result = Long.parseLong(value);
+    			logger.info("Using supplied value {} for parameter {}", result, parameterName);
+    		}
+    		catch(NumberFormatException e) {
+    			logger.info("Invalid value {} for parameter {} - using default {}.", value, parameterName, def);
+    			result = def;
+    		}
+    	}
+    	
+    	return result;
+    }
 
+	/**
+	 * Create motor instance based on factory class supplied in java environment variable.
+	 * 
+	 * @return
+	 */
 	private Motor createMotor() {
+		// get the values for expected time down and time up from environment variables - or use default
+		long etd = getLongParameter(RaspiConstants.PROPERTY_TIME_DOWN, RaspiConstants.PROPERTY_VALUE_TIME_DOWN),
+		     etu = getLongParameter(RaspiConstants.PROPERTY_TIME_UP, RaspiConstants.PROPERTY_VALUE_TIME_UP);
+		
 		String motorFactoryName = 
 				System.getProperty(RaspiConstants.PROPERTY_MOTORFACTORY, 
 						RaspiConstants.PROPERTY_VALUE_DEFAULT_MOTORFACTORY);
-			
+		
 		try {
 			MotorFactory motorFactory = (MotorFactory) Class.forName(motorFactoryName).newInstance();
-			Motor result = motorFactory.createMotor();
+			Motor result = motorFactory.createMotor(new ExpectedTime(etu, 1000L), new ExpectedTime(etd, 1000L));
 			
-			logger.info("Instanciated motor class {}", result.getClass().getName());
+			logger.info("Instanciated motor class {} with expected time down {} and time up {}", result.getClass().getName(), etd, etu);
 			
 			return result;
 		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
