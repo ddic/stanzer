@@ -46,6 +46,10 @@ public class MockMotor implements Motor {
 		this.expectedTimeStoppedDown = expectedTimeStoppedDown;
 	}
 
+	public MockMotor(ExpectedTime maxTimeUp, ExpectedTime maxTimeDown) {
+		this(false, false, LedState.OFF, LedState.OFF, maxTimeUp, maxTimeDown, new ExpectedTime(1000L, 0L));
+	}
+
 	@Override
 	public boolean isMovingDown() {
 		return this.movingDown;

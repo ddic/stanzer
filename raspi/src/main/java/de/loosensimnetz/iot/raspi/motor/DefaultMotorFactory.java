@@ -7,4 +7,9 @@ public class DefaultMotorFactory implements MotorFactory {
 		return new RaspiMotor();
 	}
 
+	@Override
+	public Motor createMotor(ExpectedTime maxTimeUp, ExpectedTime maxTimeDown) {
+		return new RaspiMotor(maxTimeUp, maxTimeDown);
+	}
+
 }
