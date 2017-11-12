@@ -39,6 +39,11 @@ public class MotorStateMovingUp extends MotorState {
 			return;
 		}
 
+		if (motorMovingUp) {
+			// Motor is still on its way Up - no state change
+			return;
+		}
+
 		if (motorStopped && timeElapsed >= earliestStateChange) {
 			logger.info(
 					"Motor stopped at {} within tolerance (from {} to {}) - changing state to MotorStateStoppedInitial.",
