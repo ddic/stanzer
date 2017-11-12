@@ -39,15 +39,6 @@ public class MotorStateMovingUp extends MotorState {
 			return;
 		}
 
-		if (motorMovingUp && timeElapsed > latestStateChange) {
-			// Motor is taking too long
-			logger.info("Motor is taking too long - still running after {} ms, expect stop after {} ms.", timeElapsed,
-					latestStateChange);
-
-			changeState(sensor, MotorStateError.instance(), updateTime);
-			return;
-		}
-
 		if (motorMovingUp && timeElapsed <= latestStateChange) {
 			// Motor is still on its way Up - no state change
 			return;

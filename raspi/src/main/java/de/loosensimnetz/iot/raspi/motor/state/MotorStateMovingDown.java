@@ -41,16 +41,6 @@ public class MotorStateMovingDown extends MotorState {
 			return;
 		}
 
-		if (motorMovingUp && timeElapsed < earliestStateChange) {
-			// Motor moving up too early
-			logger.info(
-					"Motor moving up too early - change of direction after {} ms, did not expect change before {} ms.",
-					timeElapsed, earliestStateChange);
-
-			changeState(sensor, MotorStateError.instance(), updateTime);
-			return;
-		}
-
 		if (motorStopped && timeElapsed <= latestStateChange) {
 			// Motor stopped within tolerance
 			logger.info(
@@ -61,16 +51,7 @@ public class MotorStateMovingDown extends MotorState {
 			return;
 		}
 
-		if (motorMovingDown && timeElapsed > latestStateChange) {
-			// Motor is taking too long
-			logger.info("Motor is taking too long - still running after {} ms, expect stop after {} ms.", timeElapsed,
-					latestStateChange);
-
-			changeState(sensor, MotorStateError.instance(), updateTime);
-			return;
-		}
-
-		if (motorMovingUp && timeElapsed >= earliestStateChange && timeElapsed <= latestStateChange) {
+		if (motorMovingUp && timeElapsed >= earliestStateChange) {
 			// Motor moving up within tolerance
 			logger.info(
 					"Motor changed direction upward at {} within tolerance (from {} to {}) - changing state to MotorStateMovingUp.",

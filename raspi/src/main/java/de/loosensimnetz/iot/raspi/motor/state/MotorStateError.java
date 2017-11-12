@@ -33,6 +33,7 @@ public class MotorStateError extends MotorState {
 		
 		if (motor.isMovingUp()) {
 			// If the motor is moving up after an error, we are in the MovingUp state 
+			// this should not happen under ordinary circumstances - but you never know...
 			logger.info("Motor starting to go down again at {} - changing state to MovingUp.", updateTime);
 			
 			changeState(sensor, MotorStateMovingUp.instance(), updateTime);
