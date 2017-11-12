@@ -1,4 +1,4 @@
-package de.loosensimnetz.iot;
+package de.loosensimnetz.iot.raspi;
 
 public interface RaspiConstants {
 	String PROPERTY_MOTORFACTORY = "de.loosensimnetz.iot.raspi.MotorFactory";

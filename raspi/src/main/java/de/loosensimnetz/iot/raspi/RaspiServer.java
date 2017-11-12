@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
-import de.loosensimnetz.iot.RaspiConstants;
 import de.loosensimnetz.iot.raspi.motor.ExpectedTime;
 import de.loosensimnetz.iot.raspi.motor.Motor;
 import de.loosensimnetz.iot.raspi.motor.MotorFactory;
