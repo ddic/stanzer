@@ -41,7 +41,7 @@ public class MotorStateMovingDown extends MotorState {
 			return;
 		}
 
-		if (motorStopped && timeElapsed <= latestStateChange) {
+		if (motorStopped) {
 			// Motor stopped within tolerance
 			logger.info(
 					"Motor stopped at {} within tolerance (from {} to {}) - changing state to MotorStateStoppedDown.",
@@ -61,7 +61,7 @@ public class MotorStateMovingDown extends MotorState {
 			return;
 		}
 
-		if (motorMovingDown && timeElapsed <= latestStateChange) {
+		if (motorMovingDown) {
 			// Motor is still on its way down - no state change
 			return;
 		}
