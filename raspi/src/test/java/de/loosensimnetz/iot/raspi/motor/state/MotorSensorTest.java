@@ -111,6 +111,7 @@ public class MotorSensorTest {
 	}
 	
 	@Test
+	@Ignore  // Taking too long no longer an error
 	public void testTransitionFromMovingDownToStoppedTooLate() {
 		logger.info("*************** testTransitionFromMovingDownTooLate");
 		
