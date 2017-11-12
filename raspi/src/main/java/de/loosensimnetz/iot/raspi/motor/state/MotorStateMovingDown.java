@@ -50,6 +50,11 @@ public class MotorStateMovingDown extends MotorState {
 			changeState(sensor, MotorStateStoppedDown.instance(), updateTime);
 			return;
 		}
+		
+		if (motorMovingDown) {
+			// Motor is still on its way down - no state change
+			return;
+		}
 
 		if (motorMovingUp && timeElapsed >= earliestStateChange) {
 			// Motor moving up within tolerance
@@ -58,11 +63,6 @@ public class MotorStateMovingDown extends MotorState {
 					timeElapsed, earliestStateChange, latestStateChange);
 
 			changeState(sensor, MotorStateMovingUp.instance(), updateTime);
-			return;
-		}
-
-		if (motorMovingDown) {
-			// Motor is still on its way down - no state change
 			return;
 		}
 
