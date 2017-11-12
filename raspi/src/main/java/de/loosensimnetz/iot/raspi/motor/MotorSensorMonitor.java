@@ -44,7 +44,6 @@ public class MotorSensorMonitor extends Thread {
 		this.motorSensor = motorSensor;
 		this.setDaemon(true);
 		this.setName("MotorSensorMonitor daemon thread");
-		this.setPriority(MIN_PRIORITY);
 	}
 
 	/**
@@ -66,9 +65,8 @@ public class MotorSensorMonitor extends Thread {
 
 		logger.info("MotorSensorMonitor started");
 
-		// Initialize leds
-		motorSensor.getMotor().setLed12State(LedState.OFF);
-		motorSensor.getMotor().setLed13State(LedState.OFF);
+		// Initialize leds etc.
+		initialize();
 
 		while (goOn && !Thread.currentThread().isInterrupted()) {
 			logger.debug("Delaying for {} milliseconds", updateInterval);
@@ -86,8 +84,7 @@ public class MotorSensorMonitor extends Thread {
 
 				// If we are blinking - interrupt (stop) the thread
 				if (blinkingLed != null) {
-					blinkingLed.interrupt();
-					blinkingLed = null;
+					interruptBlinkingLed();
 				}
 
 				this.interrupt();
@@ -117,8 +114,7 @@ public class MotorSensorMonitor extends Thread {
 			if (newState != MotorStateError.instance() && blinkingLed != null) {
 				logger.info("Error state left - stopping to blink.");
 
-				blinkingLed.interrupt();
-				blinkingLed = null;
+				interruptBlinkingLed();
 			}
 
 			// 5.) If the motor is moving, turn on the respective led:
@@ -144,9 +140,25 @@ public class MotorSensorMonitor extends Thread {
 
 				logger.debug("In state {}. Turning off leds.", newState.getStateId());
 
-				motorSensor.getMotor().setLed12State(LedState.OFF);
-				motorSensor.getMotor().setLed13State(LedState.OFF);
+				initialize();
 			}
 		}
+	}
+
+	public void initialize() {
+		if (blinkingLed != null) {
+			interruptBlinkingLed();
+		}
+		
+		// Blink 5 times
+		blinkingLed = new BlinkingLed(10, 200L, BlinkType.SIMULTANEOUS, motorSensor);
+		
+		motorSensor.getMotor().setLed12State(LedState.OFF);
+		motorSensor.getMotor().setLed13State(LedState.OFF);
+	}
+
+	private void interruptBlinkingLed() {
+		blinkingLed.interrupt();
+		blinkingLed = null;
 	}
 }
