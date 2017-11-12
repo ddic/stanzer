@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import de.loosensimnetz.iot.raspi.motor.BlinkingLed.BlinkType;
 import de.loosensimnetz.iot.raspi.motor.Motor.LedState;
+import de.loosensimnetz.iot.raspi.motor.state.MotorState;
 import de.loosensimnetz.iot.raspi.motor.state.MotorStateError;
 import de.loosensimnetz.iot.raspi.motor.state.MotorStateMovingDown;
 import de.loosensimnetz.iot.raspi.motor.state.MotorStateMovingUp;
@@ -73,7 +74,7 @@ public class MotorSensorMonitor extends Thread {
 			logger.debug("Delaying for {} milliseconds", updateInterval);
 			
 			// Remember the old state
-			String oldState = motorSensor.getStateId();
+			MotorState oldState = motorSensor.getState();
 			
 			// Sleep for a while
 			try {
@@ -96,24 +97,24 @@ public class MotorSensorMonitor extends Thread {
 			motorSensor.update(System.currentTimeMillis());
 			
 			//...and get the new state
-			String newState = motorSensor.getStateId();
+			MotorState newState = motorSensor.getState();
 
 			// Log message if state has changed
-			if (!oldState.equals(newState)) {
-				logger.info("Updating state. Old state: {}, new state: {}", oldState, newState);
+			if (oldState != newState) {
+				logger.info("Updating state. Old state: {}, new state: {}", oldState.getStateId(), newState.getStateId());
 			}
 
 			// 3.) If an error state is entered, start the BlinkingLed thread and let the
 			// leds blink three times
-			if (motorSensor.getState() == MotorStateError.instance() && blinkingLed == null) {
+			if (newState == MotorStateError.instance() && blinkingLed == null) {
 				logger.info("Error state - starting to blink.");
 
-				blinkingLed = new BlinkingLed(6, 500L, BlinkType.ALTERNATING, motorSensor);
+				blinkingLed = new BlinkingLed(0, 250L, BlinkType.ALTERNATING, motorSensor);
 				blinkingLed.start();
 			}
 
 			// 4.) If an error state is left, interrupt (stop) the BlinkingLed thread.
-			if (motorSensor.getState() != MotorStateError.instance() && blinkingLed != null) {
+			if (newState != MotorStateError.instance() && blinkingLed != null) {
 				logger.info("Error state left - stopping to blink.");
 
 				blinkingLed.interrupt();
@@ -123,14 +124,14 @@ public class MotorSensorMonitor extends Thread {
 			// 5.) If the motor is moving, turn on the respective led:
 			// moving up -> led12 OFF led13 ON
 			// moving down -> led12 ON led13 OFF
-			if (motorSensor.getState() == MotorStateMovingUp.instance()) {
+			if (newState == MotorStateMovingUp.instance()) {
 				logger.debug("In MotorStateMovingDown. Turning on led 1.");
 
 				motorSensor.getMotor().setLed12State(LedState.ON);
 				motorSensor.getMotor().setLed13State(LedState.OFF);
 			}
 
-			if (motorSensor.getState() != MotorStateMovingDown.instance()) {
+			if (newState != MotorStateMovingDown.instance()) {
 				logger.debug("In MotorStateMovingDown. Turning on led 2.");
 
 				motorSensor.getMotor().setLed12State(LedState.OFF);
@@ -138,10 +139,10 @@ public class MotorSensorMonitor extends Thread {
 			}
 
 			// 6.) If the motor is stopped, turn off the leds
-			if (motorSensor.getState() == MotorStateStoppedDown.instance()
-					|| motorSensor.getState() == MotorStateStoppedInitial.instance()) {
+			if (newState == MotorStateStoppedDown.instance()
+					|| newState == MotorStateStoppedInitial.instance()) {
 
-				logger.debug("In MotorStateStoppedDown or MotorStateStoppedInitial. Turning off leds.");
+				logger.debug("In state {}. Turning off leds.", newState.getStateId());
 
 				motorSensor.getMotor().setLed12State(LedState.OFF);
 				motorSensor.getMotor().setLed13State(LedState.OFF);
