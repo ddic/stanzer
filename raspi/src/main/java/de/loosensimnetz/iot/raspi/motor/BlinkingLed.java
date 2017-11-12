@@ -83,7 +83,7 @@ public class BlinkingLed extends Thread {
 			break;
 		}
 
-		while (goOn && !isInterrupted()) {
+		while (goOn && !Thread.currentThread().isInterrupted()) {
 			if (numBlink > 0) {
 				if (round++ >= numBlink)
 					goOn = false;

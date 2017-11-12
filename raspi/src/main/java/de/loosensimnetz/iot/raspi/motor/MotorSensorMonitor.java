@@ -70,7 +70,7 @@ public class MotorSensorMonitor extends Thread {
 		motorSensor.getMotor().setLed12State(LedState.OFF);
 		motorSensor.getMotor().setLed13State(LedState.OFF);
 
-		while (goOn && !this.isInterrupted()) {
+		while (goOn && !Thread.currentThread().isInterrupted()) {
 			logger.debug("Delaying for {} milliseconds", updateInterval);
 			
 			// Remember the old state
@@ -131,7 +131,7 @@ public class MotorSensorMonitor extends Thread {
 				motorSensor.getMotor().setLed13State(LedState.OFF);
 			}
 
-			if (newState != MotorStateMovingDown.instance()) {
+			if (newState == MotorStateMovingDown.instance()) {
 				logger.debug("In MotorStateMovingDown. Turning on led 2.");
 
 				motorSensor.getMotor().setLed12State(LedState.OFF);
