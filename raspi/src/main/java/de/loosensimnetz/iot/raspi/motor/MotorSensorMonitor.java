@@ -42,7 +42,7 @@ public class MotorSensorMonitor extends Thread {
 		this.updateInterval = updateInterval;
 		this.motorSensor = motorSensor;
 		this.setDaemon(true);
-		this.setName("de.loosensimnetz.iot.raspi.motor.MotorSensorMonitor daemon thread");
+		this.setName("MotorSensorMonitor daemon thread");
 		this.setPriority(MIN_PRIORITY);
 	}
 

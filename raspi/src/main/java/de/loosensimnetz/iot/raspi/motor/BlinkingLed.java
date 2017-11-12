@@ -55,7 +55,7 @@ public class BlinkingLed extends Thread {
 		this.blinkType = blinkType;
 		this.motorSensor = motorSensor;
 		this.setDaemon(true);
-		this.setName("Blinking led daemon thread");
+		this.setName("BlinkingLed daemon thread");
 
 		if (numBlink < 0)
 			throw new IllegalArgumentException("Parameter numBlink must be greater than or eaqual to zero!");
